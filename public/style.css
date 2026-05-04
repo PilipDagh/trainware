@@ -1,181 +1,213 @@
 body {
-  margin: 0;
-  overflow: hidden;
-  background-color: #222;
-  color: white;
-  font-family: monospace;
-  touch-action: none; /* Prevents zooming/scrolling on mobile */
+    margin: 0;
+    overflow: hidden;
+    background-color: #222;
+    color: white;
+    font-family: monospace;
+    touch-action: none; /* Prevents zooming/scrolling on mobile */
 }
 
 canvas {
-  display: block;
+    display: block;
+    transition: filter 0.5s, transform 0.5s;
 }
+
+/* Drunk Physics Animations */
+@keyframes drunkSway1 {
+    0% { transform: rotate(-1deg) scale(1.01); filter: hue-rotate(0deg); }
+    50% { transform: rotate(1deg) scale(1.01); filter: hue-rotate(45deg); }
+    100% { transform: rotate(-1deg) scale(1.01); filter: hue-rotate(0deg); }
+}
+@keyframes drunkSway2 {
+    0% { transform: rotate(-3deg) scale(1.03); filter: hue-rotate(0deg); }
+    50% { transform: rotate(3deg) scale(1.03); filter: hue-rotate(120deg); }
+    100% { transform: rotate(-3deg) scale(1.03); filter: hue-rotate(0deg); }
+}
+@keyframes drunkSway3 {
+    0% { transform: rotate(-6deg) scale(1.06); filter: hue-rotate(0deg) blur(1px); }
+    50% { transform: rotate(6deg) scale(1.06); filter: hue-rotate(240deg) blur(2px); }
+    100% { transform: rotate(-6deg) scale(1.06); filter: hue-rotate(360deg) blur(1px); }
+}
+
+.drunk-1 { animation: drunkSway1 4s infinite ease-in-out; }
+.drunk-2 { animation: drunkSway2 3s infinite ease-in-out; }
+.drunk-3 { animation: drunkSway3 1.5s infinite ease-in-out; }
 
 /* Menu Styles */
 #menu-container {
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: #111;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: #111;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
 }
 
 #menu-container div {
-  background: #222;
-  padding: 30px;
-  border: 2px solid #555;
-  border-radius: 10px;
-  text-align: center;
-  min-width: 300px;
+    background: #222;
+    padding: 30px;
+    border: 2px solid #555;
+    border-radius: 10px;
+    text-align: center;
+    min-width: 300px;
 }
 
 #menu-container input {
-  padding: 5px;
-  font-family: monospace;
-  background: #000;
-  color: #fff;
-  border: 1px solid #555;
+    padding: 5px;
+    font-family: monospace;
+    background: #000;
+    color: #fff;
+    border: 1px solid #555;
 }
 
 #menu-container button, .overlay-box button {
-  padding: 10px 20px;
-  margin: 5px;
-  background: #444;
-  color: white;
-  border: 1px solid #888;
-  cursor: pointer;
-  font-family: monospace;
-  font-size: 16px;
-  transition: background 0.2s;
+    padding: 10px 20px;
+    margin: 5px;
+    background: #444;
+    color: white;
+    border: 1px solid #888;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 16px;
+    transition: background 0.2s;
 }
 
 #menu-container button:hover, .overlay-box button:hover {
-  background: #666;
+    background: #666;
 }
 
 #lobby-list {
-  max-height: 200px;
-  overflow-y: auto;
-  text-align: left;
-  margin-bottom: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    text-align: left;
+    margin-bottom: 10px;
 }
 
 .lobby-item {
-  padding: 10px;
-  border-bottom: 1px solid #444;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #444;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 /* Game UI Styles */
 #ui {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  pointer-events: none;
-  text-shadow: 1px 1px 2px black;
-  font-size: 18px;
-  z-index: 10;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    pointer-events: none;
+    text-shadow: 1px 1px 2px black;
+    font-size: 18px;
+    z-index: 10;
 }
 
 #controls {
-  font-size: 14px;
-  color: #ddd;
-  margin-top: 10px;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 8px;
-  border-radius: 5px;
-  display: inline-block;
+    font-size: 14px;
+    color: #ddd;
+    margin-top: 10px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 8px;
+    border-radius: 5px;
+    display: inline-block;
 }
 
 #messages {
-  margin-top: 20px;
-  color: #ff4444;
-  font-weight: bold;
-  font-size: 20px;
-  background: rgba(0, 0, 0, 0.5);
-  padding: 5px;
-  border-radius: 5px;
-  display: inline-block;
+    margin-top: 20px;
+    color: #ff4444;
+    font-weight: bold;
+    font-size: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 5px;
+    border-radius: 5px;
+    display: inline-block;
 }
 
 #messages:empty {
-  display: none;
+    display: none;
+}
+
+#departure-warning {
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 36px;
+    color: #ff3333;
+    font-weight: bold;
+    text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+    z-index: 60;
+    pointer-events: none;
+    background: rgba(0,0,0,0.7);
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: 2px solid #ff3333;
 }
 
 .hidden {
-  display: none !important;
+    display: none !important;
 }
 
 /* Overlays (Shop, Death, Victory) */
 .overlay-box {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(0, 0, 0, 0.9);
-  padding: 20px;
-  border: 2px solid white;
-  text-align: center;
-  z-index: 50;
-  border-radius: 8px;
-  box-shadow: 0px 0px 20px rgba(0,0,0,0.8);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    padding: 20px;
+    border: 2px solid white;
+    text-align: center;
+    z-index: 50;
+    border-radius: 8px;
+    box-shadow: 0px 0px 20px rgba(0,0,0,0.8);
 }
 
 #shop-items button {
-  display: block;
-  width: 100%;
+    display: block;
+    width: 100%;
 }
 
 /* Mobile Controls */
 #mobile-controls {
-  position: absolute;
-  bottom: 20px;
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  padding: 0 20px;
-  box-sizing: border-box;
-  z-index: 20;
-  pointer-events: none; /* Let touches pass through empty space */
+    position: absolute;
+    bottom: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px;
+    box-sizing: border-box;
+    z-index: 20;
+    pointer-events: none;
 }
 
 #joystick-area, #action-area {
-  pointer-events: auto;
+    pointer-events: auto;
 }
 
 #dpad button {
-  width: 50px; height: 50px;
-  margin: 2px;
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  color: white;
-  font-weight: bold;
-  border-radius: 10px;
+    width: 50px; height: 50px;
+    margin: 2px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    color: white;
+    font-weight: bold;
+    border-radius: 10px;
 }
 
 #action-area {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 5px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 5px;
 }
 
 #action-area button {
-  padding: 15px;
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  color: white;
-  font-weight: bold;
-  border-radius: 10px;
-}
-
-/* Hide mobile controls on desktop */
-@media (min-width: 768px) {
-  #mobile-controls {
-      display: none !important;
-  }
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    color: white;
+    font-weight: bold;
+    border-radius: 10px;
 }
