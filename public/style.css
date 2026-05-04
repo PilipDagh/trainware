@@ -4,12 +4,74 @@ body {
   background-color: #222;
   color: white;
   font-family: monospace;
+  touch-action: none; /* Prevents zooming/scrolling on mobile */
 }
 
 canvas {
   display: block;
 }
 
+/* Menu Styles */
+#menu-container {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: #111;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+#menu-container div {
+  background: #222;
+  padding: 30px;
+  border: 2px solid #555;
+  border-radius: 10px;
+  text-align: center;
+  min-width: 300px;
+}
+
+#menu-container input {
+  padding: 5px;
+  font-family: monospace;
+  background: #000;
+  color: #fff;
+  border: 1px solid #555;
+}
+
+#menu-container button, .overlay-box button {
+  padding: 10px 20px;
+  margin: 5px;
+  background: #444;
+  color: white;
+  border: 1px solid #888;
+  cursor: pointer;
+  font-family: monospace;
+  font-size: 16px;
+  transition: background 0.2s;
+}
+
+#menu-container button:hover, .overlay-box button:hover {
+  background: #666;
+}
+
+#lobby-list {
+  max-height: 200px;
+  overflow-y: auto;
+  text-align: left;
+  margin-bottom: 10px;
+}
+
+.lobby-item {
+  padding: 10px;
+  border-bottom: 1px solid #444;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Game UI Styles */
 #ui {
   position: absolute;
   top: 10px;
@@ -17,6 +79,7 @@ canvas {
   pointer-events: none;
   text-shadow: 1px 1px 2px black;
   font-size: 18px;
+  z-index: 10;
 }
 
 #controls {
@@ -48,7 +111,8 @@ canvas {
   display: none !important;
 }
 
-#shop, #death, #victory {
+/* Overlays (Shop, Death, Victory) */
+.overlay-box {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -57,7 +121,7 @@ canvas {
   padding: 20px;
   border: 2px solid white;
   text-align: center;
-  z-index: 10;
+  z-index: 50;
   border-radius: 8px;
   box-shadow: 0px 0px 20px rgba(0,0,0,0.8);
 }
@@ -65,17 +129,53 @@ canvas {
 #shop-items button {
   display: block;
   width: 100%;
-  margin: 5px 0;
-  padding: 10px;
-  background: #444;
-  color: white;
-  border: 1px solid #888;
-  cursor: pointer;
-  font-family: monospace;
-  font-size: 16px;
-  transition: background 0.2s;
 }
 
-#shop-items button:hover {
-  background: #666;
+/* Mobile Controls */
+#mobile-controls {
+  position: absolute;
+  bottom: 20px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
+  box-sizing: border-box;
+  z-index: 20;
+  pointer-events: none; /* Let touches pass through empty space */
+}
+
+#joystick-area, #action-area {
+  pointer-events: auto;
+}
+
+#dpad button {
+  width: 50px; height: 50px;
+  margin: 2px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  color: white;
+  font-weight: bold;
+  border-radius: 10px;
+}
+
+#action-area {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+
+#action-area button {
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  color: white;
+  font-weight: bold;
+  border-radius: 10px;
+}
+
+/* Hide mobile controls on desktop */
+@media (min-width: 768px) {
+  #mobile-controls {
+      display: none !important;
+  }
 }
