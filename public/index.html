@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transcontinental Survival</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="ui">
+        <div id="stats">
+            HP: <span id="hp">120</span> | Ammo: <span id="ammo">32</span> | Bombs: <span id="bombs">0</span> | $: <span id="money">0</span><br>
+            Distance: <span id="dist">0</span> / 3181 km | Biome: <span id="biome">Forest</span><br>
+            Fuel: <span id="fuel">1003</span> | Speed: <span id="speed">0</span> km/h<br>
+            Cold: <span id="cold">167</span>
+        </div>
+        <div id="controls">
+            [WASD] Move | [Mouse] Aim | [Click] Shoot/Mine<br>[E] Train Button/Mount Horse | [F] Throw Bomb | [Space] Knife
+        </div>
+        <div id="messages"></div>
+    </div>
+
+    <div id="shop" class="hidden">
+        <h2>Town Shop</h2>
+        <div id="shop-items"></div>
+        <button onclick="closeShop()">Close</button>
+    </div>
+
+    <div id="death" class="hidden">
+        <h1>YOU DIED</h1>
+        <p>Refresh to restart or spectate.</p>
+    </div>
+
+    <div id="victory" class="hidden">
+        <h1>wowww you win Tyler wowwww, made by Julian, Kylin, and Tyler!</h1>
+        <button onclick="location.reload()">Restart</button>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="client.js"></script>
+</body>
+</html>
