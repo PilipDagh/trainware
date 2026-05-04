@@ -1,0 +1,41 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Transcontinental Survival",
+  "colors": {
+    "primary": "#8b4513",
+    "light": "#d4a373",
+    "dark": "#3e2723"
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get started",
+        "pages": [
+          "introduction",
+          "quickstart"
+        ]
+      },
+      {
+        "group": "Multiplayer",
+        "pages": [
+          "multiplayer/lobbies",
+          "multiplayer/spectator-and-restart"
+        ]
+      },
+      {
+        "group": "Gameplay",
+        "pages": [
+          "gameplay/controls",
+          "gameplay/hud",
+          "gameplay/shop"
+        ]
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/PilipDagh/trainware"
+    }
+  }
+}

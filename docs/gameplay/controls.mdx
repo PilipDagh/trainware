@@ -1,0 +1,72 @@
+---
+title: Controls
+description: Keyboard, mouse, and on-screen touch controls for movement, combat, reloading, and interaction.
+---
+
+Transcontinental Survival supports keyboard and mouse on desktop, plus an on-screen control layout that appears automatically on touch devices.
+
+## Keyboard and mouse
+
+| Action | Input |
+| --- | --- |
+| Move | `W` `A` `S` `D` |
+| Aim | Mouse |
+| Shoot or mine | Left click |
+| Interact, dump coal, drink | `E` |
+| Reload | `R` |
+| Place beer barrel | `B` |
+| Throw bomb | `F` |
+| Knife | `Space` |
+
+### Reloading
+
+A dedicated reload action replaces the previous auto-reload behavior. Press `R` to swap a fresh magazine when you choose, instead of waiting for the gun to reload between shots.
+
+```text
+Magazine: 0 / 5    Reserve: 27
+> Press R to reload <
+```
+
+<Tip>
+Reload during cover or while the train is moving between encounters. Reloading mid-fight can leave you exposed.
+</Tip>
+
+### Click targets
+
+A left click on the canvas does one of two things:
+
+- If the train is **stopped** and your cursor is within 30 pixels of an ore vein, you mine the ore.
+- Otherwise, you fire your weapon.
+
+## Mobile touch controls
+
+On any device with touch input, the on-screen controls appear automatically when the game starts. You can also force them on from the **Settings** menu by enabling **Force Mobile Touch Controls**.
+
+The layout has a directional pad on the left and action buttons on the right:
+
+| Button | Action |
+| --- | --- |
+| `W` `A` `S` `D` | Move |
+| **Shoot/Mine** | Fire your weapon, or mine the nearest ore when stopped |
+| **Interact (E)** | Interact with NPCs, dump coal, drink from a barrel |
+| **Reload (R)** | Reload your magazine |
+| **Bomb (F)** | Throw a bomb in the direction you're facing |
+| **Knife (Spc)** | Knife attack |
+| **Barrel (B)** | Place a beer barrel on the train |
+
+<Note>
+Pinch-to-zoom and page scrolling are disabled while the game is running so touch input stays on the controls. Refresh the page to exit if you need to use the rest of your browser.
+</Note>
+
+## Train departure warning
+
+As the train approaches a town it stops automatically, and as it prepares to leave you'll see a **Train departing in N seconds** countdown overlay. Use the warning to:
+
+- Finish mining nearby ore.
+- Buy items at the saloon.
+- Get back on the train before it pulls out.
+
+## Related
+
+- [HUD](/gameplay/hud)
+- [Shop](/gameplay/shop)
