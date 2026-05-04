@@ -31,12 +31,13 @@ function createRoomState(id, name, password, maxPlayers) {
         id, name, password, maxPlayers, status: 'LOBBY',
         players: {}, enemies:[], ores: [], projectiles: [], bombs: [], horses:[], barrels:[],
         train: {
-            distance: 0, speed: 0, maxSpeed: 35, state: 'STOPPED', // STOPPED, DEPARTING, ACCELERATING, MOVING, SLOWING
+            distance: 0, speed: 0, maxSpeed: 35, state: 'STOPPED', 
             fuel: 1003, maxFuel: 1003, buttonCooldown: 0, departureTimer: 0,
             speedMultiplier: 1, speedUpgraded: false, fuelUpgrades: 0,
             nextTownDist: Math.random() * (497 - 274) + 274,
             inTown: false, townWarningSent: false
         },
+        townX: null, // Used to scroll the town background
         biome: 'forest', inMountains: false,
         mountainStart: Math.random() * (200 - 50) + 50, mountainEnd: 0,
         avalanche: { active: false, timer: 0 }, avalancheRocks:[],
@@ -65,10 +66,9 @@ function spawnOres(room) {
 }
 
 function spawnEnemies(room, isTown, isRaid = false) {
-    // DRASTICALLY REDUCED ENEMY SPAWNS
     let groups = isTown ? 2 : 1; 
     if (!isTown && !isRaid) {
-        if (Math.random() < 0.2) groups++; // Only 20% chance for an extra group in wilderness
+        if (Math.random() < 0.2) groups++; 
     }
     if (isRaid) {
         groups = 2;
@@ -76,16 +76,16 @@ function spawnEnemies(room, isTown, isRaid = false) {
     }
 
     for (let g = 0; g < groups; g++) {
-        if (!isTown && !isRaid && Math.random() > 0.30) continue; // 70% chance a group doesn't even spawn in wilderness
+        if (!isTown && !isRaid && Math.random() > 0.30) continue; 
         
-        let baseX = (Math.random() > 0.5 ? 700 : -700);
+        let baseX = room.townX !== null ? room.townX + (Math.random() > 0.5 ? 200 : -200) : (Math.random() > 0.5 ? 700 : -700);
         let baseY = (Math.random() > 0.5 ? 400 : -400);
 
-        for (let i = 0; i < 2; i++) { // Reduced gunmen per group
+        for (let i = 0; i < 2; i++) { 
             if (Math.random() < 0.5 || isRaid) createEnemy(room, 'gunman', baseX, baseY, isRaid);
         }
-        for (let i = 0; i < 2; i++) createEnemy(room, 'knifeman', baseX, baseY, isRaid); // Reduced knifemen
-        if (Math.random() < 0.15) { // Reduced bombmen chance
+        for (let i = 0; i < 2; i++) createEnemy(room, 'knifeman', baseX, baseY, isRaid); 
+        if (Math.random() < 0.15) { 
             createEnemy(room, 'bombman', baseX, baseY, isRaid);
         }
     }
@@ -96,7 +96,7 @@ function createEnemy(room, type, x, y, isRaid) {
         id: Math.random().toString(), type, isRaid,
         x: x + (Math.random() - 0.5) * 150, y: y + (Math.random() - 0.5) * 150,
         hp: type === 'gunman' ? 30 : 40,
-        hasHorse: !isRaid && Math.random() < 0.25, // Reduced horse chance
+        hasHorse: !isRaid && Math.random() < 0.25, 
         lastShot: 0, aimAngle: 0
     });
 }
@@ -180,21 +180,20 @@ io.on('connection', (socket) => {
         let p = room.players[socket.id];
         if (!p || p.dead) return;
         
-        // Drunk speed boost (11%)
         let speedMult = (p.drunk.sips >= 3) ? 1.11 : 1;
         let speed = (p.onHorse ? 162 : 150) * speedMult;
         
         p.x += data.dx * speed * 0.033;
         p.y += data.dy * speed * 0.033;
 
-        let onTrain = (p.x >= -400 && p.x <= 280 && p.y >= -50 && p.y <= 50);
-        p.onTrain = onTrain;
-
-        if (!onTrain && (room.train.state === 'MOVING' || room.train.state === 'ACCELERATING' || room.train.state === 'SLOWING')) {
-            p.dead = true; p.hp = 0;
-            io.to(room.id).emit('msg', `${p.name} exploded by leaving the moving train!`);
-            checkAllDead(room);
+        // NEW: Train Barrier Logic
+        if (room.train.state !== 'STOPPED') {
+            // Clamp player position to the train's bounding box
+            p.x = Math.max(-400, Math.min(280, p.x));
+            p.y = Math.max(-50, Math.min(50, p.y));
         }
+
+        p.onTrain = (p.x >= -400 && p.x <= 280 && p.y >= -50 && p.y <= 50);
     });
 
     socket.on('aim', (angle) => {
@@ -271,12 +270,10 @@ io.on('connection', (socket) => {
             let b = room.barrels[i];
             if (Math.hypot(p.x - b.x, p.y - b.y) < 40) {
                 if (p.inventory.beerBottles > 0 && b.sipsLeft < 67) {
-                    // Refill
                     p.inventory.beerBottles--;
-                    b.sipsLeft = Math.min(67, b.sipsLeft + Math.ceil(67 * 0.08)); // ~5.36 sips per bottle
+                    b.sipsLeft = Math.min(67, b.sipsLeft + Math.ceil(67 * 0.08));
                     socket.emit('msg', `Refilled barrel! (${b.sipsLeft}/67)`);
                 } else if (b.sipsLeft > 0 && p.drinkCooldown <= 0) {
-                    // Drink
                     b.sipsLeft--;
                     p.drunk.sips++;
                     p.drunk.timer += 32;
@@ -320,7 +317,7 @@ io.on('connection', (socket) => {
         if (!p || p.dead || p.mag <= 0) return;
         
         p.mag--;
-        let dmg = (p.drunk.sips >= 3) ? 30 * 1.2 : 30; // 20% more damage if drunk
+        let dmg = (p.drunk.sips >= 3) ? 30 * 1.2 : 30;
         room.projectiles.push({
             id: Math.random().toString(), x: p.x, y: p.y,
             vx: Math.cos(p.aimAngle) * 400, vy: Math.sin(p.aimAngle) * 400,
@@ -355,7 +352,7 @@ io.on('connection', (socket) => {
         let p = room.players[socket.id];
         if (!p || p.dead || !p.hasKnife) return;
         
-        let dmg = (p.drunk.sips >= 3) ? 56 * 1.2 : 56; // 20% more damage if drunk
+        let dmg = (p.drunk.sips >= 3) ? 56 * 1.2 : 56;
         for (let i = room.enemies.length - 1; i >= 0; i--) {
             let e = room.enemies[i];
             if (Math.hypot(p.x - e.x, p.y - e.y) < 50) {
@@ -425,7 +422,6 @@ io.on('connection', (socket) => {
         room.votes++;
         
         let totalPlayers = Object.keys(room.players).length;
-        // Fixed: Now requires 50% of players to vote yes
         if (room.votes >= Math.ceil(totalPlayers * 0.5)) {
             io.to(room.id).emit('msg', 'Vote passed! Restarting lobby...');
             setTimeout(() => resetRoom(room), 3000);
@@ -468,7 +464,7 @@ function resetRoom(room) {
         inTown: false, townWarningSent: false
     };
     room.enemies = []; room.ores = []; room.projectiles = []; room.bombs =[]; room.horses =[]; room.barrels = [];
-    room.avalancheRocks =[]; room.shopNPC = null;
+    room.avalancheRocks =[]; room.shopNPC = null; room.townX = null;
     
     for (let id in room.players) {
         let p = room.players[id];
@@ -489,34 +485,26 @@ setInterval(() => {
         let room = rooms[roomId];
         if (room.status !== 'PLAYING') continue;
 
-        // Train Logic
+        // --- Train State & World Scrolling ---
+        let dx = 0; // The distance the world scrolls this frame
+
         if (room.train.state === 'DEPARTING') {
             room.train.departureTimer -= dt;
             if (room.train.departureTimer <= 0) {
                 room.train.state = 'ACCELERATING';
                 
-                // Kill players off train
+                // Teleport players who are off the train back on!
                 for (let id in room.players) {
                     if (!room.players[id].onTrain && !room.players[id].dead) {
-                        room.players[id].dead = true;
-                        room.players[id].hp = 0;
-                        io.to(room.id).emit('msg', `${room.players[id].name} was left behind and exploded!`);
+                        room.players[id].x = -350; // Back of the caboose
+                        room.players[id].y = 0;
+                        io.to(room.id).emit('msg', `${room.players[id].name} was teleported back to the train!`);
                     }
                 }
-                checkAllDead(room);
-
-                // Kill enemies off train
-                let enemiesKilled = false;
-                room.enemies = room.enemies.filter(e => {
-                    let onTrain = (e.x >= -400 && e.x <= 280 && e.y >= -50 && e.y <= 50);
-                    if (!onTrain) enemiesKilled = true;
-                    return onTrain;
-                });
-                if (enemiesKilled) io.to(room.id).emit('msg', 'Enemies left behind were obliterated!');
             }
         } else if (room.train.state === 'ACCELERATING') {
             room.train.speed += (room.train.maxSpeed / 8) * dt;
-            room.avalancheRocks =[]; // Clear rocks when moving
+            room.avalancheRocks =[]; 
             if (room.train.speed >= room.train.maxSpeed) room.train.state = 'MOVING';
         } else if (room.train.state === 'SLOWING') {
             room.train.speed -= (room.train.maxSpeed / 4) * dt;
@@ -525,29 +513,41 @@ setInterval(() => {
                 room.train.state = 'STOPPED';
                 room.train.buttonCooldown = 3;
                 room.train.townWarningSent = false;
-                spawnOres(room);
                 
                 if (room.train.distance >= room.train.nextTownDist) {
                     room.train.inTown = true;
                     room.train.nextTownDist = room.train.distance + Math.random() * (497 - 274) + 274;
                     generateShop(room);
-                    room.shopNPC = { x: 0, y: 150 }; 
+                    room.townX = 0; // Town is centered at the train's stop position
+                    room.shopNPC = { x: room.townX, y: 150 }; 
                     spawnEnemies(room, true);
                     io.to(room.id).emit('msg', 'Arrived at a town! Visit the NPC outside to sell ores and buy items.');
                 } else {
                     room.train.inTown = false;
+                    room.townX = null;
+                    spawnOres(room);
                     spawnEnemies(room, false);
                 }
             }
         }
 
         if (room.train.state === 'MOVING' || room.train.state === 'ACCELERATING' || room.train.state === 'SLOWING') {
+            let speedInMetersPerSecond = (room.train.speed * room.train.speedMultiplier) * 0.277; // km/h to m/s
+            dx = speedInMetersPerSecond * 10 * dt; // Arbitrary multiplier to make it feel right
             room.train.distance += (room.train.speed * room.train.speedMultiplier * 0.1) * dt;
             room.train.fuel -= 17 * dt;
             if (room.train.fuel <= 0) {
                 room.train.fuel = 0;
                 room.train.state = 'SLOWING';
             }
+
+            // Scroll all world objects
+            room.ores.forEach(o => o.x -= dx);
+            room.enemies.forEach(e => e.x -= dx);
+            room.horses.forEach(h => h.x -= dx);
+            room.avalancheRocks.forEach(r => r.x -= dx);
+            if (room.shopNPC) room.shopNPC.x -= dx;
+            if (room.townX !== null) room.townX -= dx;
 
             let distToTown = room.train.nextTownDist - room.train.distance;
             if (distToTown <= 0.15 && distToTown > 0 && !room.train.townWarningSent) {
@@ -576,7 +576,7 @@ setInterval(() => {
             room.avalancheTimer += dt;
             if (room.avalancheTimer >= 8.0) {
                 room.avalancheTimer = 0;
-                if (Math.random() < 0.03) { // VERY RARE (3% chance)
+                if (Math.random() < 0.03) {
                     room.avalanche.active = true;
                     room.avalanche.timer = 0.8;
                     io.to(room.id).emit('msg', 'AVALANCHE WARNING! STOP THE TRAIN!');
@@ -657,7 +657,6 @@ setInterval(() => {
                 p.coldMeter = 167;
             }
 
-            // Drunk Physics
             if (p.drinkCooldown > 0) p.drinkCooldown -= dt;
             if (p.drunk.sips >= 3) {
                 p.drunk.timer -= dt;
@@ -704,95 +703,4 @@ setInterval(() => {
                 if (e.type === 'gunman' && minDist < 300 && e.lastShot > 2) {
                     e.lastShot = 0;
                     room.projectiles.push({
-                        id: Math.random().toString(), x: e.x, y: e.y,
-                        vx: Math.cos(e.aimAngle) * 300, vy: Math.sin(e.aimAngle) * 300,
-                        isPlayer: false, dmg: 30
-                    });
-                } else if (e.type === 'knifeman' && minDist < 40 && e.lastShot > 1) {
-                    e.lastShot = 0;
-                    target.hp -= 20;
-                    if (target.hp <= 0) {
-                        target.dead = true;
-                        checkAllDead(room);
-                    }
-                } else if (e.type === 'bombman' && minDist < 250 && e.lastShot > 3) {
-                    e.lastShot = 0;
-                    room.bombs.push({ x: target.x, y: target.y, timer: 1.5, isPlayer: false });
-                }
-            }
-        }
-
-        // Projectiles
-        for (let i = room.projectiles.length - 1; i >= 0; i--) {
-            let proj = room.projectiles[i];
-            proj.x += proj.vx * dt;
-            proj.y += proj.vy * dt;
-
-            let hit = false;
-            if (proj.isPlayer) {
-                for (let j = room.enemies.length - 1; j >= 0; j--) {
-                    let e = room.enemies[j];
-                    if (Math.hypot(proj.x - e.x, proj.y - e.y) < 20) {
-                        e.hp -= proj.dmg || 10;
-                        if (e.hp <= 0) {
-                            if (e.hasHorse) room.horses.push({ x: e.x, y: e.y });
-                            room.enemies.splice(j, 1);
-                        }
-                        hit = true; break;
-                    }
-                }
-            } else {
-                for (let id in room.players) {
-                    let p = room.players[id];
-                    if (!p.dead && Math.hypot(proj.x - p.x, proj.y - p.y) < 20) {
-                        p.hp -= proj.dmg;
-                        if (p.hp <= 0) {
-                            p.dead = true;
-                            checkAllDead(room);
-                        }
-                        hit = true; break;
-                    }
-                }
-            }
-            if (hit || Math.abs(proj.x) > 2000 || Math.abs(proj.y) > 2000) room.projectiles.splice(i, 1);
-        }
-
-        // Bombs
-        for (let i = room.bombs.length - 1; i >= 0; i--) {
-            let b = room.bombs[i];
-            b.timer -= dt;
-            if (b.timer <= 0) {
-                if (b.isPlayer) {
-                    for (let j = room.enemies.length - 1; j >= 0; j--) {
-                        if (Math.hypot(b.x - room.enemies[j].x, b.y - room.enemies[j].y) < 80) {
-                            if (room.enemies[j].hasHorse) room.horses.push({ x: room.enemies[j].x, y: room.enemies[j].y });
-                            room.enemies.splice(j, 1);
-                        }
-                    }
-                } else {
-                    for (let id in room.players) {
-                        let p = room.players[id];
-                        if (!p.dead && Math.hypot(b.x - p.x, b.y - p.y) < 80) {
-                            p.hp -= 60;
-                            if (p.hp <= 0) {
-                                p.dead = true;
-                                checkAllDead(room);
-                            }
-                        }
-                    }
-                }
-                room.bombs.splice(i, 1);
-            }
-        }
-
-        io.to(room.id).emit('state', room);
-
-        if (room.train.distance >= 3181) {
-            room.status = 'VOTING';
-            io.to(room.id).emit('victory');
-        }
-    }
-}, 1000 / 30);
-
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+                        id: Math.r
