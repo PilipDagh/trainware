@@ -1,0 +1,66 @@
+---
+title: HUD
+description: Read the in-game stats panel, including separate magazine and reserve ammo and live inventory tallies.
+---
+
+The heads-up display sits in the top-left corner during a run. It shows your character stats, train state, and a live inventory tally.
+
+## Stats panel
+
+```text
+HP: 120 | Ammo: 5/32 | Bombs: 0 | $: 0
+Distance: 0 / 3181 km | Biome: Forest
+Fuel: 1003 | Speed: 0 km/h
+Cold: 167
+Gold: 0 | Silver: 0 | Coal: 0
+Beer Bottles: 0 | Beer Barrels: 0
+```
+
+| Stat | Meaning |
+| --- | --- |
+| **HP** | Current health. You die at zero. |
+| **Ammo** | Shown as `magazine / reserve`. Magazine is the loaded round count; reserve is what's left in your pockets. |
+| **Bombs** | Throwable bombs in your inventory. |
+| **$** | Cash you can spend at the saloon. |
+| **Distance** | Kilometers traveled out of 3,181 total. |
+| **Biome** | Current biome: `FOREST`, `DESERT`, or `TUNDRA`. |
+| **Fuel** | Coal in the firebox. The train stops when it runs out. |
+| **Speed** | Train speed in km/h. |
+| **Cold** | Cold meter. It rises in the tundra and harms you at high values. |
+
+## Ammo display
+
+The ammo readout shows the magazine and reserve as separate values, so you can see at a glance whether you need to reload before reaching for more bullets:
+
+| Value | Meaning |
+| --- | --- |
+| `5/32` | 5 rounds loaded, 32 rounds in reserve |
+| `0/27` | Magazine empty, reload before firing |
+| `5/0` | Out of reserve ammo, buy more at the shop |
+
+Press `R` (or **Reload (R)** on mobile) to move rounds from the reserve into the magazine.
+
+## Inventory line
+
+The inventory line tracks materials you've collected and consumables you've bought:
+
+| Item | Source |
+| --- | --- |
+| **Gold** | Mined from gold ore at town stops |
+| **Silver** | Mined from silver ore at town stops |
+| **Coal** | Mined from coal ore, used as train fuel |
+| **Beer Bottles** | Bought at the saloon for $3 each |
+| **Beer Barrels** | Bought at the saloon for $11 each |
+
+<Tip>
+Watch the **Coal** count when fuel is low. Pick up coal at town stops and dump it into the firebox using the orange **DUMP** button on top of the coal car.
+</Tip>
+
+## Game UI visibility
+
+The canvas and HUD stay hidden while you're in the menus and lobby. They appear together when the host starts the game, so you no longer see an empty world while choosing a lobby.
+
+## Related
+
+- [Controls](/gameplay/controls)
+- [Shop](/gameplay/shop)
