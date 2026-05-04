@@ -1,5 +1,20 @@
 # Changelog
 
+## Week of June 1, 2026
+
+### New features
+
+- **Tundra biome.** The route now passes through a frozen stretch where exposed players slowly lose body heat and can freeze to death. Stay on the train to warm up, or buy **Clothes** from the shop NPC to stay warm out in the snow.
+- **Mountain avalanches.** Forested sections may include mountain passes where a moving train can trigger an avalanche. You'll get a warning to stop in time; if you don't, the train is force-stopped, everyone on board takes 50 damage, and rocks are left scattered around the tracks.
+- **Train raids.** Periodic enemy raids now attack the train while you're moving. Wipe out the raiders and your group either heals 30 HP or earns $2 each, depending on whether you're already at full health.
+- **Alcohol poisoning.** Staying drunk no longer just risks an explosion at 11 sips; you'll now lose HP gradually the longer you stay over the limit. A "you sobered up" message appears when the effect finally wears off.
+- **Victory state.** Surviving the full route (about 3,181 meters) now ends the run with a victory event for the whole lobby, instead of carrying on forever.
+
+### Updates
+
+- **Anyone left behind when the train departs is destroyed.** Players who aren't aboard when the 8-second countdown ends now explode along with any enemies that didn't make it on, with a message to the rest of the group.
+- **Smoother real-time simulation.** Train movement, biome transitions, enemy AI, projectiles, bombs, and ore spawns now run on a continuous server tick, so movement and combat feel more consistent for everyone in the lobby.
+
 ## Week of May 25, 2026
 
 ### New features
