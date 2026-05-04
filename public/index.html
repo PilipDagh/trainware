@@ -19,18 +19,20 @@
 
         <div id="settings-menu" class="hidden">
             <h2>Settings</h2>
-            <label style="font-size: 18px; cursor: pointer;">
-                <input type="checkbox" id="mobile-toggle" style="width: 20px; height: 20px;"> 
-                Force Mobile Touch Controls
+            <label class="setting-item">
+                <input type="checkbox" id="mobile-toggle"> Force Mobile Joysticks
+            </label><br>
+            <label class="setting-item">
+                <input type="checkbox" id="autolock-toggle"> Enable Auto-Lock On (Heat-Sync)
             </label><br><br>
-            <button onclick="backToMain()">Back</button>
+            <button onclick="saveSettings()">Save & Back</button>
         </div>
 
         <div id="create-lobby" class="hidden">
             <h2>Create Lobby</h2>
             <label>Lobby Name: <input type="text" id="lobbyName" value="My Train"></label><br><br>
             <label>Max Players: <input type="number" id="maxPlayers" min="1" max="6" value="6"></label><br><br>
-            <label>Password (Leave blank for public): <input type="text" id="lobbyPassword"></label><br><br>
+            <label>Password: <input type="text" id="lobbyPassword" placeholder="Optional"></label><br><br>
             <button onclick="createLobby()">Create</button>
             <button onclick="backToMain()">Back</button>
         </div>
@@ -51,46 +53,41 @@
     <!-- In-Game UI -->
     <div id="game-ui" class="hidden">
         <div id="stats">
-            HP: <span id="hp">120</span> | Ammo: <span id="mag">5</span>/<span id="ammo">32</span> | Bombs: <span id="bombs">0</span> | $: <span id="money">0</span><br>
-            Distance: <span id="dist">0</span> / 3181 km | Biome: <span id="biome">Forest</span><br>
+            HP: <span id="hp">120</span> | Ammo: <span id="mag">5</span>/<span id="ammo">32</span> | $: <span id="money">0</span><br>
+            Dist: <span id="dist">0</span>/3181 km | Biome: <span id="biome">Forest</span><br>
             Fuel: <span id="fuel">1003</span> | Speed: <span id="speed">0</span> km/h<br>
-            Cold: <span id="cold">167</span><br>
-            <span style="color: gold;">Gold: <span id="inv-gold">0</span></span> | 
-            <span style="color: silver;">Silver: <span id="inv-silver">0</span></span> | 
-            <span style="color: gray;">Coal: <span id="inv-coal">0</span></span><br>
-            <span style="color: #f39c12;">Beer Bottles: <span id="inv-bottles">0</span></span> | 
-            <span style="color: #d35400;">Beer Barrels: <span id="inv-barrels">0</span></span>
-        </div>
-        <div id="controls">
-            [WASD] Move | [Mouse] Aim | [Click] Shoot/Mine<br>
-            [E] Interact/Dump Coal/Drink | [R] Reload | [B] Place Barrel<br>
-            [F] Throw Bomb | [Space] Knife
+            <span style="color: gold;">G: <span id="inv-gold">0</span></span> | 
+            <span style="color: silver;">S: <span id="inv-silver">0</span></span> | 
+            <span style="color: #aaa;">C: <span id="inv-coal">0</span></span>
         </div>
         <div id="messages"></div>
     </div>
 
     <!-- Departure Warning -->
     <div id="departure-warning" class="hidden">
-        TRAIN DEPARTING IN <span id="dep-timer">8</span> SECONDS!
+        TRAIN DEPARTING IN <span id="dep-timer">8</span>s!
     </div>
 
-    <!-- Mobile Touch Controls -->
+    <!-- Mobile Dual Joysticks -->
     <div id="mobile-controls" class="hidden">
-        <div id="joystick-area">
-            <div id="dpad">
-                <button id="btn-w">W</button><br>
-                <button id="btn-a">A</button>
-                <button id="btn-s">S</button>
-                <button id="btn-d">D</button>
-            </div>
+        <!-- Left Joystick: Movement -->
+        <div id="move-joystick-container" class="joystick-base">
+            <div id="move-joystick-knob" class="joystick-knob"></div>
         </div>
-        <div id="action-area">
-            <button id="btn-shoot">Shoot/Mine</button>
-            <button id="btn-interact">Interact (E)</button>
-            <button id="btn-reload">Reload (R)</button>
-            <button id="btn-bomb">Bomb (F)</button>
-            <button id="btn-knife">Knife (Spc)</button>
-            <button id="btn-barrel">Barrel (B)</button>
+        
+        <!-- Right Joystick: Aiming -->
+        <div id="aim-joystick-container" class="joystick-base">
+            <div id="aim-joystick-knob" class="joystick-knob"></div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div id="mobile-actions">
+            <button id="btn-shoot">FIRE</button>
+            <button id="btn-interact">E</button>
+            <button id="btn-reload">R</button>
+            <button id="btn-bomb">F</button>
+            <button id="btn-barrel">B</button>
+            <button id="btn-knife">KNIFE</button>
         </div>
     </div>
 
@@ -103,19 +100,17 @@
 
     <div id="death" class="hidden overlay-box">
         <h1>YOU DIED</h1>
-        <p>You are now spectating.</p>
-        <button onclick="spectateNext()">Spectate Next Player</button>
+        <button onclick="spectateNext()">Spectate Next</button>
     </div>
 
     <div id="all-dead" class="hidden overlay-box">
-        <h1>EVERYONE DIED</h1>
-        <p>The journey has ended.</p>
-        <button onclick="voteRestart()">Vote to Restart</button>
+        <h1>GAME OVER</h1>
+        <button onclick="voteRestart()">Vote Restart (50%)</button>
     </div>
 
     <div id="victory" class="hidden overlay-box">
-        <h1>wowww you win Tyler wowwww, made by Julian, Kylin, and Tyler!</h1>
-        <button onclick="voteRestart()">Vote to Restart</button>
+        <h1>wowww you win Tyler wowwww!</h1>
+        <button onclick="voteRestart()">Vote Restart</button>
     </div>
 
     <canvas id="gameCanvas" class="hidden"></canvas>
