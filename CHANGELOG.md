@@ -1,5 +1,20 @@
 # Changelog
 
+## Week of May 18, 2026
+
+### New features
+
+- **Drunk mode.** Take a swig from a placed Beer Barrel with [E] to start sipping. Three or more sips give you a speed boost and harder-hitting shots and knife strikes, with the screen swaying more as you keep drinking. Knock back 11 sips and you'll explode, so pace yourself.
+- **Place barrels on the train.** Use the new [B] key (or the on-screen **Barrel** button on mobile) to drop a Beer Barrel from your inventory wherever you're standing on the train. Teammates can drink from it or top it off with bottles.
+- **Settings menu.** A new **Settings** option on the main menu lets you force mobile touch controls on any device, handy for testing on a desktop or playing on a hybrid setup.
+- **Train departure warning.** When someone hits the engine button, an on-screen "TRAIN DEPARTING IN X SECONDS" countdown gives the whole crew time to scramble back on board before the train pulls away.
+
+### Updates
+
+- **Beer in your HUD.** Your inventory now shows Beer Bottles and Beer Barrels alongside gold, silver, and coal so you can see your stock at a glance.
+- **Refreshed menu and lobby styling.** Menus, the lobby list, the shop, and overlays have a cleaner, more consistent look with smoother transitions between screens.
+- **Updated controls hint.** The in-game controls panel now reflects the new **Drink** action on [E] and **Place Barrel** on [B].
+
 ## Week of May 11, 2026
 
 ### New features
