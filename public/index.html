@@ -2,41 +2,105 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Transcontinental Survival</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="ui">
+    <!-- Main Menu & Lobby System -->
+    <div id="menu-container">
+        <div id="main-menu">
+            <h1>Transcontinental Survival</h1>
+            <label>Name: <input type="text" id="playerName" value="Conductor" maxlength="12"></label><br><br>
+            <button onclick="showCreateLobby()">Create Lobby</button>
+            <button onclick="showJoinLobby()">Join Lobby</button>
+        </div>
+
+        <div id="create-lobby" class="hidden">
+            <h2>Create Lobby</h2>
+            <label>Lobby Name: <input type="text" id="lobbyName" value="My Train"></label><br><br>
+            <label>Max Players: <input type="number" id="maxPlayers" min="1" max="6" value="6"></label><br><br>
+            <label>Password (Leave blank for public): <input type="text" id="lobbyPassword"></label><br><br>
+            <button onclick="createLobby()">Create</button>
+            <button onclick="backToMain()">Back</button>
+        </div>
+
+        <div id="join-lobby" class="hidden">
+            <h2>Join Lobby</h2>
+            <div id="lobby-list"></div>
+            <button onclick="backToMain()" style="margin-top: 10px;">Back</button>
+        </div>
+
+        <div id="in-lobby" class="hidden">
+            <h2 id="lobby-title">Lobby</h2>
+            <ul id="lobby-players"></ul>
+            <button onclick="startGame()">Start Game</button>
+        </div>
+    </div>
+
+    <!-- In-Game UI -->
+    <div id="game-ui" class="hidden">
         <div id="stats">
-            HP: <span id="hp">120</span> | Ammo: <span id="ammo">32</span> | Bombs: <span id="bombs">0</span> | $: <span id="money">0</span><br>
+            HP: <span id="hp">120</span> | Ammo: <span id="mag">5</span>/<span id="ammo">32</span> | Bombs: <span id="bombs">0</span> | $: <span id="money">0</span><br>
             Distance: <span id="dist">0</span> / 3181 km | Biome: <span id="biome">Forest</span><br>
             Fuel: <span id="fuel">1003</span> | Speed: <span id="speed">0</span> km/h<br>
-            Cold: <span id="cold">167</span>
+            Cold: <span id="cold">167</span><br>
+            <span style="color: gold;">Gold: <span id="inv-gold">0</span></span> | 
+            <span style="color: silver;">Silver: <span id="inv-silver">0</span></span> | 
+            <span style="color: gray;">Coal: <span id="inv-coal">0</span></span>
         </div>
         <div id="controls">
-            [WASD] Move | [Mouse] Aim | [Click] Shoot/Mine<br>[E] Train Button/Mount Horse | [F] Throw Bomb | [Space] Knife
+            [WASD] Move | [Mouse] Aim | [Click] Shoot/Mine<br>
+            [E] Interact/Dump Coal/Mount | [R] Reload<br>
+            [F] Throw Bomb | [Space] Knife
         </div>
         <div id="messages"></div>
     </div>
 
-    <div id="shop" class="hidden">
+    <!-- Mobile Touch Controls -->
+    <div id="mobile-controls" class="hidden">
+        <div id="joystick-area">
+            <div id="dpad">
+                <button id="btn-w">W</button><br>
+                <button id="btn-a">A</button>
+                <button id="btn-s">S</button>
+                <button id="btn-d">D</button>
+            </div>
+        </div>
+        <div id="action-area">
+            <button id="btn-shoot">Shoot/Mine</button>
+            <button id="btn-interact">Interact (E)</button>
+            <button id="btn-reload">Reload (R)</button>
+            <button id="btn-bomb">Bomb (F)</button>
+            <button id="btn-knife">Knife (Spc)</button>
+        </div>
+    </div>
+
+    <!-- Overlays -->
+    <div id="shop" class="hidden overlay-box">
         <h2>Town Shop</h2>
         <div id="shop-items"></div>
         <button onclick="closeShop()">Close</button>
     </div>
 
-    <div id="death" class="hidden">
+    <div id="death" class="hidden overlay-box">
         <h1>YOU DIED</h1>
-        <p>Refresh to restart or spectate.</p>
+        <p>You are now spectating.</p>
+        <button onclick="spectateNext()">Spectate Next Player</button>
     </div>
 
-    <div id="victory" class="hidden">
+    <div id="all-dead" class="hidden overlay-box">
+        <h1>EVERYONE DIED</h1>
+        <p>The journey has ended.</p>
+        <button onclick="voteRestart()">Vote to Restart</button>
+    </div>
+
+    <div id="victory" class="hidden overlay-box">
         <h1>wowww you win Tyler wowwww, made by Julian, Kylin, and Tyler!</h1>
-        <button onclick="location.reload()">Restart</button>
+        <button onclick="voteRestart()">Vote to Restart</button>
     </div>
 
-    <canvas id="gameCanvas"></canvas>
+    <canvas id="gameCanvas" class="hidden"></canvas>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="client.js"></script>
