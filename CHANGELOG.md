@@ -1,5 +1,18 @@
 # Changelog
 
+## Week of June 8, 2026
+
+### Updates
+
+- **Towns stay put as you roll past.** The world now scrolls with the train, so when you stop in a town the shop NPC, town backdrop, and enemies all sit at a real spot in the world instead of snapping into place around the train.
+- **Wilderness loot only.** Ores now spawn only between towns. Pulling into a town no longer scatters mining nodes around the platform.
+- **Town ambushes spawn closer.** When you arrive in a town, enemies now appear near the town itself instead of off in the surrounding wilderness, so fights happen where the action is.
+
+### Bug fixes
+
+- **No more accidental deaths from stepping off a moving train.** While the train is moving, your character is now kept within the train's bounds instead of being instantly killed for slipping off the edge.
+- **Stragglers get a second chance.** If the train departs without you, you're now teleported to the back of the caboose with a heads-up message instead of exploding on the spot.
+
 ## Week of June 1, 2026
 
 ### New features
