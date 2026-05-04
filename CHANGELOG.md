@@ -1,5 +1,11 @@
 # Changelog
 
+## Week of June 1, 2026
+
+### Bug fixes
+
+- **Fixed a styling glitch.** Resolved a CSS issue that could cause parts of the interface to render incorrectly.
+
 ## Week of May 25, 2026
 
 ### New features
