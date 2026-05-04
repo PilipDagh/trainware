@@ -9,14 +9,6 @@ let gameState = null;
 let keys = { w: false, a: false, s: false, d: false };
 let mouseX = 0, mouseY = 0;
 
-const TRAIN_CARS =[
-    { id: 'engine', x: 120, w: 160, y: -40, h: 80 },
-    { id: 'coal', x: 10, w: 100, y: -35, h: 70 },
-    { id: 'pass1', x: -140, w: 140, y: -40, h: 80 },
-    { id: 'pass2', x: -290, w: 140, y: -40, h: 80 },
-    { id: 'caboose', x: -400, w: 100, y: -35, h: 70 }
-];
-
 window.addEventListener('resize', () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -126,9 +118,9 @@ window.addEventListener('keydown', (e) => {
     if (key === 'b') socket.emit('placeBarrel');
     if (key === 'f') {
         if (gameState && gameState.players[socket.id]) {
-            let cx = canvas.width / 2; let cy = canvas.height / 2;
-            let worldX = gameState.players[socket.id].x + (mouseX - cx);
-            let worldY = gameState.players[socket.id].y + (mouseY - cy);
+            let p = gameState.players[socket.id];
+            let worldX = p.x + Math.cos(p.aimAngle) * 150;
+            let worldY = p.y + Math.sin(p.aimAngle) * 150;
             socket.emit('throwBomb', { x: worldX, y: worldY });
         }
     }
@@ -143,8 +135,10 @@ window.addEventListener('keyup', (e) => {
 window.addEventListener('mousemove', (e) => {
     mouseX = e.clientX; mouseY = e.clientY;
     if (gameState && gameState.players[socket.id]) {
+        let p = gameState.players[socket.id];
         let cx = canvas.width / 2; let cy = canvas.height / 2;
-        socket.emit('aim', Math.atan2(mouseY - cy, mouseX - cx));
+        // Aiming is relative to the player's position on screen
+        socket.emit('aim', Math.atan2(mouseY - (cy + p.y), mouseX - (cx + p.x)));
     }
 });
 
@@ -155,10 +149,11 @@ window.addEventListener('mousedown', (e) => {
         if (gameState && gameState.train.state === 'STOPPED') {
             let myPlayer = gameState.players[socket.id];
             if (myPlayer) {
-                let worldX = myPlayer.x + (mouseX - cx);
-                let worldY = myPlayer.y + (mouseY - cy);
+                // Convert mouse click to world coordinates
+                let worldX = (mouseX - cx) + myPlayer.x;
+                let worldY = (mouseY - cy) + myPlayer.y;
                 for (let ore of gameState.ores) {
-                    if (Math.hypot(worldX - ore.x, worldY - ore.y) < 60) { // Increased mine distance slightly
+                    if (Math.hypot(worldX - ore.x, worldY - ore.y) < 60) {
                         socket.emit('mine', ore.id);
                         clickedOre = true; break;
                     }
@@ -173,15 +168,15 @@ window.addEventListener('mousedown', (e) => {
 const bindBtn = (id, key) => {
     let btn = document.getElementById(id);
     if(!btn) return;
-    btn.addEventListener('touchstart', (e) => { e.preventDefault(); keys[key] = true; });
-    btn.addEventListener('touchend', (e) => { e.preventDefault(); keys[key] = false; });
+    btn.addEventListener('touchstart', (e) => { e.preventDefault(); keys[key] = true; }, { passive: false });
+    btn.addEventListener('touchend', (e) => { e.preventDefault(); keys[key] = false; }, { passive: false });
 };
 bindBtn('btn-w', 'w'); bindBtn('btn-a', 'a'); bindBtn('btn-s', 's'); bindBtn('btn-d', 'd');
 
-document.getElementById('btn-shoot')?.addEventListener('touchstart', (e) => { e.preventDefault(); socket.emit('shoot'); });
-document.getElementById('btn-interact')?.addEventListener('touchstart', (e) => { e.preventDefault(); socket.emit('interact'); });
-document.getElementById('btn-reload')?.addEventListener('touchstart', (e) => { e.preventDefault(); socket.emit('reload'); });
-document.getElementById('btn-barrel')?.addEventListener('touchstart', (e) => { e.preventDefault(); socket.emit('placeBarrel'); });
+document.getElementById('btn-shoot')?.addEventListener('touchstart', (e) => { e.preventDefault(); socket.emit('shoot'); }, { passive: false });
+document.getElementById('btn-interact')?.addEventListener('touchstart', (e) => { e.preventDefault(); socket.emit('interact'); }, { passive: false });
+document.getElementById('btn-reload')?.addEventListener('touchstart', (e) => { e.preventDefault(); socket.emit('reload'); }, { passive: false });
+document.getElementById('btn-barrel')?.addEventListener('touchstart', (e) => { e.preventDefault(); socket.emit('placeBarrel'); }, { passive: false });
 document.getElementById('btn-bomb')?.addEventListener('touchstart', (e) => { 
     e.preventDefault(); 
     if(gameState && gameState.players[socket.id]) {
@@ -190,8 +185,8 @@ document.getElementById('btn-bomb')?.addEventListener('touchstart', (e) => {
         let by = p.y + Math.sin(p.aimAngle) * 150;
         socket.emit('throwBomb', {x: bx, y: by});
     }
-});
-document.getElementById('btn-knife')?.addEventListener('touchstart', (e) => { e.preventDefault(); socket.emit('stab'); });
+}, { passive: false });
+document.getElementById('btn-knife')?.addEventListener('touchstart', (e) => { e.preventDefault(); socket.emit('stab'); }, { passive: false });
 
 // --- UI UPDATES ---
 socket.on('state', (state) => {
@@ -253,7 +248,6 @@ function updateUI() {
     document.getElementById('inv-bottles').innerText = p.inventory.beerBottles;
     document.getElementById('inv-barrels').innerText = p.inventory.beerBarrels;
 
-    // Departure Warning
     let depWarning = document.getElementById('departure-warning');
     if (gameState.train.state === 'DEPARTING') {
         depWarning.classList.remove('hidden');
@@ -262,8 +256,7 @@ function updateUI() {
         depWarning.classList.add('hidden');
     }
 
-    // Drunk Physics CSS Classes
-    canvas.className = ''; // Reset classes
+    canvas.className = '';
     if (!document.getElementById('game-ui').classList.contains('hidden')) {
         canvas.classList.remove('hidden');
     }
@@ -341,6 +334,10 @@ function drawHumanoid(x, y, color, angle, hasKnife, onHorse, isEnemy, enemyType,
 }
 
 function drawTrain() {
+    // This function now draws the train at a static position (0,0)
+    ctx.save();
+    ctx.translate(0, 0); // Centered on the world origin
+
     ctx.fillStyle = '#555';
     ctx.fillRect(110, -5, 10, 10); 
     ctx.fillRect(0, -5, 10, 10);   
@@ -358,7 +355,6 @@ function drawTrain() {
             ctx.fillStyle = '#444'; ctx.beginPath(); ctx.moveTo(0, 10); ctx.lineTo(-30, 40); ctx.lineTo(0, 70); ctx.fill();
             ctx.fillStyle = '#111'; ctx.fillRect(10, 30, 20, 20);
             
-            // Train Start/Stop Button
             ctx.fillStyle = (gameState.train.state === 'STOPPED' || gameState.train.state === 'DEPARTING') && gameState.train.buttonCooldown <= 0 ? '#0f0' : '#f00';
             ctx.beginPath(); ctx.arc(120, 40, 12, 0, Math.PI * 2); ctx.fill();
             ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
@@ -371,7 +367,6 @@ function drawTrain() {
                     ctx.fillRect(i, j, 12, 12);
                 }
             }
-            // Coal Dump Button Visual
             ctx.fillStyle = '#ffaa00';
             ctx.fillRect(40, 25, 20, 20);
             ctx.fillStyle = '#fff'; ctx.font = '10px monospace'; ctx.fillText('DUMP', 38, 40);
@@ -390,6 +385,7 @@ function drawTrain() {
         }
         ctx.restore();
     });
+    ctx.restore();
 }
 
 function draw() {
@@ -401,11 +397,13 @@ function draw() {
     let myPlayer = gameState.players[socket.id];
     if (!myPlayer) return requestAnimationFrame(draw);
 
-    let camX = myPlayer.x;
-    let camY = myPlayer.y;
+    let camX = 0; let camY = 0;
     if (myPlayer.dead && myPlayer.spectatingId && gameState.players[myPlayer.spectatingId]) {
         camX = gameState.players[myPlayer.spectatingId].x;
         camY = gameState.players[myPlayer.spectatingId].y;
+    } else {
+        camX = myPlayer.x;
+        camY = myPlayer.y;
     }
 
     let cx = canvas.width / 2;
@@ -418,7 +416,8 @@ function draw() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
-    ctx.translate(cx - camX, cy - camY);
+    // The camera is now static, centered on the train's world position (0,0)
+    ctx.translate(cx, cy);
 
     let pixelDist = gameState.train.distance * 1000;
 
@@ -427,18 +426,18 @@ function draw() {
         let mountainOffset = (pixelDist * 0.2) % 400;
         for(let i = -2000; i < 2000; i+= 400) {
             ctx.beginPath();
-            ctx.moveTo(i - mountainOffset + camX, -400);
-            ctx.lineTo(i + 200 - mountainOffset + camX, -700);
-            ctx.lineTo(i + 400 - mountainOffset + camX, -400);
+            ctx.moveTo(i - mountainOffset, -400);
+            ctx.lineTo(i + 200 - mountainOffset, -700);
+            ctx.lineTo(i + 400 - mountainOffset, -400);
             ctx.fill();
         }
     }
 
     let sceneryOffset = pixelDist % 600;
     for(let i = -2000; i < 2000; i+= 300) {
-        let xPos = i - sceneryOffset + camX;[-300, -150, 150, 300].forEach(yOffset => {
+        let xPos = i - sceneryOffset;[-300, -150, 150, 300].forEach(yOffset => {
             let finalX = xPos + (Math.abs(yOffset) % 100);
-            let finalY = yOffset + camY;
+            let finalY = yOffset;
 
             if (gameState.biome === 'forest') {
                 ctx.fillStyle = '#3e2723'; ctx.fillRect(finalX - 5, finalY, 10, 20);
@@ -452,22 +451,23 @@ function draw() {
         });
     }
 
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
-    let groundOffset = pixelDist % 200;
-    for(let i = -2000; i < 2000; i+= 200) {
-        for(let j = -1000; j < 1000; j+= 100) {
-            ctx.fillRect(i - groundOffset + camX + (j%50), j + camY, 20, 4);
-        }
-    }
-
     let tieOffset = pixelDist % 40;
     ctx.fillStyle = '#4a3c31'; 
     for(let i = -2000; i < 2000; i+= 40) {
-        ctx.fillRect(i - tieOffset + camX, -35, 10, 70);
+        ctx.fillRect(i - tieOffset, -35, 10, 70);
     }
     ctx.fillStyle = '#777'; 
-    ctx.fillRect(-2000 + camX, -25, 4000, 6);
-    ctx.fillRect(-2000 + camX, 19, 4000, 6);
+    ctx.fillRect(-2000, -25, 4000, 6);
+    ctx.fillRect(-2000, 19, 4000, 6);
+
+    // Draw town buildings if in a town
+    if (gameState.townX !== null) {
+        ctx.fillStyle = '#a0522d';
+        for (let i = -5; i < 5; i++) {
+            ctx.fillRect(gameState.townX + i * 150 - 50, 100, 100, 100);
+            ctx.fillRect(gameState.townX + i * 150 - 50, -200, 100, 100);
+        }
+    }
 
     if (gameState.avalancheRocks && gameState.avalancheRocks.length > 0) {
         ctx.fillStyle = '#444'; ctx.strokeStyle = '#222'; ctx.lineWidth = 2;
@@ -492,23 +492,20 @@ function draw() {
         ctx.fillStyle = '#fff'; ctx.font = '12px monospace'; ctx.fillText('SHOP', gameState.shopNPC.x - 12, gameState.shopNPC.y - 15);
     }
 
-    // Draw Beer Barrels
-    gameState.barrels.forEach(b => {
-        ctx.fillStyle = '#8b4513'; // Wood
-        ctx.fillRect(b.x - 15, b.y - 20, 30, 40);
-        ctx.fillStyle = '#222'; // Metal bands
-        ctx.fillRect(b.x - 15, b.y - 10, 30, 4);
-        ctx.fillRect(b.x - 15, b.y + 6, 30, 4);
-        ctx.fillStyle = '#fff'; ctx.font = '10px monospace';
-        ctx.fillText(`${b.sipsLeft}/67`, b.x - 14, b.y - 25);
-    });
-
     ctx.fillStyle = '#8b4513';
     gameState.horses.forEach(h => {
         ctx.fillRect(h.x - 15, h.y - 10, 30, 20); ctx.fillRect(h.x + 5, h.y - 15, 15, 15); 
     });
 
     drawTrain();
+
+    gameState.barrels.forEach(b => {
+        ctx.fillStyle = '#8b4513'; ctx.fillRect(b.x - 15, b.y - 20, 30, 40);
+        ctx.fillStyle = '#222'; ctx.fillRect(b.x - 15, b.y - 10, 30, 4);
+        ctx.fillRect(b.x - 15, b.y + 6, 30, 4);
+        ctx.fillStyle = '#fff'; ctx.font = '10px monospace';
+        ctx.fillText(`${b.sipsLeft}/67`, b.x - 14, b.y - 25);
+    });
 
     gameState.enemies.forEach(e => {
         let color = e.type === 'gunman' ? '#777' : (e.type === 'knifeman' ? '#8b4513' : '#222');
