@@ -1,5 +1,15 @@
 # Changelog
 
+## Week of June 8, 2026
+
+### Updates
+
+- **Towns now scroll past in view.** Towns and the shop NPC are anchored to the spot where the train stopped, so the world properly slides by as you depart instead of snapping around.
+- **You can't fall off a moving train.** While the train is departing, accelerating, moving, or slowing, your character is now kept inside the train's footprint. The old instant-death penalty for stepping off mid-trip is gone.
+- **Stragglers get teleported back.** If the departure timer runs out while you're still off the train, you're now whisked back to the caboose with a message to the lobby instead of exploding.
+- **Enemies stick around at stops.** Enemies left behind when the train departs are no longer wiped out, so a fight you skipped won't vanish into thin air.
+- **Cleaner town stops.** Ore veins now only spawn at wilderness stops. Pull into town and you'll get the shop and town encounters without random ores cluttering the area.
+
 ## Week of June 1, 2026
 
 ### New features
