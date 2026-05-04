@@ -22,7 +22,7 @@ window.addEventListener('resize', () => {
     canvas.height = window.innerHeight;
 });
 
-// --- LOBBY SYSTEM ---
+// --- LOBBY & SETTINGS SYSTEM ---
 function showCreateLobby() {
     document.getElementById('main-menu').classList.add('hidden');
     document.getElementById('create-lobby').classList.remove('hidden');
@@ -34,9 +34,15 @@ function showJoinLobby() {
     socket.emit('getLobbies');
 }
 
+function showSettings() {
+    document.getElementById('main-menu').classList.add('hidden');
+    document.getElementById('settings-menu').classList.remove('hidden');
+}
+
 function backToMain() {
     document.getElementById('create-lobby').classList.add('hidden');
     document.getElementById('join-lobby').classList.add('hidden');
+    document.getElementById('settings-menu').classList.add('hidden');
     document.getElementById('main-menu').classList.remove('hidden');
 }
 
@@ -85,6 +91,7 @@ socket.on('lobbyCreated', (roomId) => {
 socket.on('lobbyUpdate', (room) => {
     document.getElementById('create-lobby').classList.add('hidden');
     document.getElementById('join-lobby').classList.add('hidden');
+    document.getElementById('settings-menu').classList.add('hidden');
     document.getElementById('main-menu').classList.add('hidden');
     document.getElementById('in-lobby').classList.remove('hidden');
     
@@ -102,10 +109,10 @@ socket.on('lobbyUpdate', (room) => {
 socket.on('gameStarted', () => {
     document.getElementById('menu-container').classList.add('hidden');
     document.getElementById('game-ui').classList.remove('hidden');
-    document.getElementById('gameCanvas').classList.remove('hidden');
+    canvas.classList.remove('hidden');
     
-    // Show mobile controls if on a touch device
-    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+    let forceMobile = document.getElementById('mobile-toggle').checked;
+    if (forceMobile || 'ontouchstart' in window || navigator.maxTouchPoints > 0) {
         document.getElementById('mobile-controls').classList.remove('hidden');
     }
 });
@@ -116,6 +123,7 @@ window.addEventListener('keydown', (e) => {
     if (keys.hasOwnProperty(key)) keys[key] = true;
     if (key === 'e') socket.emit('interact');
     if (key === 'r') socket.emit('reload');
+    if (key === 'b') socket.emit('placeBarrel');
     if (key === 'f') {
         if (gameState && gameState.players[socket.id]) {
             let cx = canvas.width / 2; let cy = canvas.height / 2;
@@ -150,7 +158,7 @@ window.addEventListener('mousedown', (e) => {
                 let worldX = myPlayer.x + (mouseX - cx);
                 let worldY = myPlayer.y + (mouseY - cy);
                 for (let ore of gameState.ores) {
-                    if (Math.hypot(worldX - ore.x, worldY - ore.y) < 30) {
+                    if (Math.hypot(worldX - ore.x, worldY - ore.y) < 60) { // Increased mine distance slightly
                         socket.emit('mine', ore.id);
                         clickedOre = true; break;
                     }
@@ -173,10 +181,10 @@ bindBtn('btn-w', 'w'); bindBtn('btn-a', 'a'); bindBtn('btn-s', 's'); bindBtn('bt
 document.getElementById('btn-shoot')?.addEventListener('touchstart', (e) => { e.preventDefault(); socket.emit('shoot'); });
 document.getElementById('btn-interact')?.addEventListener('touchstart', (e) => { e.preventDefault(); socket.emit('interact'); });
 document.getElementById('btn-reload')?.addEventListener('touchstart', (e) => { e.preventDefault(); socket.emit('reload'); });
+document.getElementById('btn-barrel')?.addEventListener('touchstart', (e) => { e.preventDefault(); socket.emit('placeBarrel'); });
 document.getElementById('btn-bomb')?.addEventListener('touchstart', (e) => { 
     e.preventDefault(); 
     if(gameState && gameState.players[socket.id]) {
-        // Throw bomb in direction player is facing
         let p = gameState.players[socket.id];
         let bx = p.x + Math.cos(p.aimAngle) * 150;
         let by = p.y + Math.sin(p.aimAngle) * 150;
@@ -242,12 +250,31 @@ function updateUI() {
     document.getElementById('inv-gold').innerText = p.inventory.gold;
     document.getElementById('inv-silver').innerText = p.inventory.silver;
     document.getElementById('inv-coal').innerText = p.inventory.coal;
+    document.getElementById('inv-bottles').innerText = p.inventory.beerBottles;
+    document.getElementById('inv-barrels').innerText = p.inventory.beerBarrels;
+
+    // Departure Warning
+    let depWarning = document.getElementById('departure-warning');
+    if (gameState.train.state === 'DEPARTING') {
+        depWarning.classList.remove('hidden');
+        document.getElementById('dep-timer').innerText = Math.ceil(gameState.train.departureTimer);
+    } else {
+        depWarning.classList.add('hidden');
+    }
+
+    // Drunk Physics CSS Classes
+    canvas.className = ''; // Reset classes
+    if (!document.getElementById('game-ui').classList.contains('hidden')) {
+        canvas.classList.remove('hidden');
+    }
+    if (p.drunk.sips >= 3 && p.drunk.sips < 6) canvas.classList.add('drunk-1');
+    else if (p.drunk.sips >= 6 && p.drunk.sips < 9) canvas.classList.add('drunk-2');
+    else if (p.drunk.sips >= 9) canvas.classList.add('drunk-3');
 }
 function drawHumanoid(x, y, color, angle, hasKnife, onHorse, isEnemy, enemyType, name) {
     ctx.save();
     ctx.translate(x, y);
     
-    // Draw Name Tag
     if (name) {
         ctx.save();
         ctx.fillStyle = 'white';
@@ -332,7 +359,7 @@ function drawTrain() {
             ctx.fillStyle = '#111'; ctx.fillRect(10, 30, 20, 20);
             
             // Train Start/Stop Button
-            ctx.fillStyle = gameState.train.state === 'STOPPED' && gameState.train.buttonCooldown <= 0 ? '#0f0' : '#f00';
+            ctx.fillStyle = (gameState.train.state === 'STOPPED' || gameState.train.state === 'DEPARTING') && gameState.train.buttonCooldown <= 0 ? '#0f0' : '#f00';
             ctx.beginPath(); ctx.arc(120, 40, 12, 0, Math.PI * 2); ctx.fill();
             ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
 
@@ -374,7 +401,6 @@ function draw() {
     let myPlayer = gameState.players[socket.id];
     if (!myPlayer) return requestAnimationFrame(draw);
 
-    // Spectator Camera Logic
     let camX = myPlayer.x;
     let camY = myPlayer.y;
     if (myPlayer.dead && myPlayer.spectatingId && gameState.players[myPlayer.spectatingId]) {
@@ -465,6 +491,17 @@ function draw() {
         ctx.fillRect(gameState.shopNPC.x - 10, gameState.shopNPC.y - 10, 20, 20);
         ctx.fillStyle = '#fff'; ctx.font = '12px monospace'; ctx.fillText('SHOP', gameState.shopNPC.x - 12, gameState.shopNPC.y - 15);
     }
+
+    // Draw Beer Barrels
+    gameState.barrels.forEach(b => {
+        ctx.fillStyle = '#8b4513'; // Wood
+        ctx.fillRect(b.x - 15, b.y - 20, 30, 40);
+        ctx.fillStyle = '#222'; // Metal bands
+        ctx.fillRect(b.x - 15, b.y - 10, 30, 4);
+        ctx.fillRect(b.x - 15, b.y + 6, 30, 4);
+        ctx.fillStyle = '#fff'; ctx.font = '10px monospace';
+        ctx.fillText(`${b.sipsLeft}/67`, b.x - 14, b.y - 25);
+    });
 
     ctx.fillStyle = '#8b4513';
     gameState.horses.forEach(h => {
