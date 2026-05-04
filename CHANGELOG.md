@@ -1,5 +1,24 @@
 # Changelog
 
+## Week of May 18, 2026
+
+### New features
+
+- **Live multiplayer gameplay.** Movement, aiming, shooting, reloading, mining, bomb throwing, and knife stabs now sync between everyone in the lobby in real time. Joining a game with friends finally plays the way the lobby promised.
+- **Beer barrels you can place and share.** Drop a Beer Barrel anywhere on the train, then have anyone in your group walk up and drink from it. Bottles can top barrels back up so a crew can keep one barrel going for a whole run.
+- **Drunk perks (and consequences).** Three or more sips give you a 11% movement and 20% damage boost with pistol and knife. Push past 11 sips and your character explodes, so pace yourself.
+- **Coal-to-fuel cart.** Walk up to the coal car with mined coal in your inventory and dump it in to refuel the train (50 fuel per coal). Anyone in the group can contribute.
+- **Sell ores at the shop.** Approaching the shop NPC now auto-sells any gold and silver in your inventory ($5 and $3 each) before opening the menu, so you don't have to manage cash separately.
+- **Spectate teammates after dying.** Press to cycle through living players and watch the run continue instead of staring at a static screen.
+- **Group restart vote.** Once everyone is down or you've won, a 50% restart vote sends the lobby back to the menu with stats reset for another run.
+
+### Updates
+
+- **Manual reload.** Reload now pulls from your reserve ammo on demand and tops the magazine without wasting bullets, replacing the older auto-reload behavior.
+- **Horse riding.** Walk up to a riderless horse and interact to mount it for a movement speed boost out in the wilderness.
+- **Train departure warning.** Hitting the engine button starts an 8-second countdown broadcast to the whole lobby so stragglers can sprint back on board.
+- **Leaving a moving train is fatal.** Stepping off the train while it's accelerating, moving, or slowing now kills your character, with a message to the rest of the group.
+
 ## Week of May 11, 2026
 
 ### New features
