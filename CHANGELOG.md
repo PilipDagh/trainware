@@ -1,5 +1,21 @@
 # Changelog
 
+## Week of June 1, 2026
+
+### New features
+
+- **Tundra cold meter.** Stepping off the train in the tundra biome without warm clothes now drains a cold meter, and hitting zero kills you. Stay on the train to warm back up, or grab Warm Clothes from the shop before you head out.
+- **Mountain avalanches.** Forest stretches now have mountain ranges with rare avalanche events. You'll get a warning to stop the train; if you don't make it in time, the train takes a hit, everyone loses 50 HP, and rocks scatter across the tracks.
+- **Train raids.** Bandit raids now occasionally ambush you between towns. Survive a raid as a group and everyone heals 30 HP, or earns $2 if already at full health.
+- **Victory.** Reach the end of the line (3,181km) and your run now ends in a proper victory screen for the whole lobby, kicking off the restart vote.
+
+### Updates
+
+- **Smoother multiplayer.** The server now broadcasts game state at a steady 30 FPS, so player positions, enemies, and projectiles stay in sync across the lobby instead of only updating when actions happen.
+- **Drunk consequences kick in over time.** Past three sips, your character now takes 11 damage every 19 seconds until you sober up. Drink too long and you'll die from alcohol poisoning even before hitting the explosion threshold.
+- **Sobering up.** The drunk timer now actually counts down. Stop drinking long enough and you'll get a "You sobered up" message and lose your buffs (and the damage).
+- **Enemies left behind get cleaned up.** When the train departs, any enemies still off the train are removed alongside players who got left behind, so old encounters don't follow you into the next stop.
+
 ## Week of May 25, 2026
 
 ### New features
