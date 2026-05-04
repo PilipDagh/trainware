@@ -1,0 +1,66 @@
+---
+title: Lobbies and multiplayer
+description: Create public or private lobbies, set player limits and passwords, and play together in real time.
+---
+
+Every game runs inside a lobby hosted by the server. You create or join lobbies from the main menu, and the host starts the run for everyone.
+
+## When to use lobbies
+
+- **Public games.** Leave the password field empty when creating a lobby. The lobby appears in the public list for anyone to join.
+- **Private games.** Set a password when creating a lobby. The lobby still appears in the list but is marked with a lock icon and prompts for the password on join.
+- **Solo runs.** Create a lobby with a player limit of 1 and start the game by yourself.
+
+## Create a lobby
+
+<Steps>
+  <Step title="Open the main menu">
+    Load the game URL in your browser. The main menu shows **Create Lobby**, **Join Lobby**, and **Settings**.
+  </Step>
+  <Step title="Configure the lobby">
+    Select **Create Lobby** and fill in:
+
+    - **Lobby name** — visible in the public list.
+    - **Max players** — between 1 and 6.
+    - **Password** — optional. Leave empty for a public lobby.
+  </Step>
+  <Step title="Set your player name">
+    Enter a name in the **Conductor** field on the main menu. Each player in the lobby is assigned a unique color shown in the roster.
+  </Step>
+  <Step title="Start the game">
+    Once your group is in the roster, select **Start Game**. The lobby state changes from `LOBBY` to `IN_GAME` and the canvas takes over.
+  </Step>
+</Steps>
+
+## Join a lobby
+
+<Steps>
+  <Step title="Browse public lobbies">
+    Select **Join Lobby** from the main menu. The list refreshes with each public and private lobby, showing the name, player count, max players, and a lock icon for private lobbies.
+  </Step>
+  <Step title="Enter a password if required">
+    Lock-icon lobbies prompt for a password. Public lobbies join immediately.
+  </Step>
+  <Step title="Wait in the roster">
+    You'll see the in-lobby screen with the lobby name and the colored player list. The host starts the game when ready.
+  </Step>
+</Steps>
+
+## Lobby rules
+
+- A lobby can hold up to **6 players**.
+- Lobbies that have already started won't accept new joins; you'll see "Game already started!" if you try.
+- Full lobbies return "Lobby is full!".
+- Wrong passwords return "Incorrect password!".
+- Disconnecting removes you from the lobby roster. The lobby itself stays open as long as at least one player remains.
+
+## Real-time sync
+
+All gameplay events sync between every player in the lobby:
+
+- Movement, aiming, and shooting
+- Reloading and throwing bombs
+- Mining ores and selling at the shop
+- Placing and drinking from beer barrels
+- Knife stabs and damage
+- Train fuel level and departure countdowns

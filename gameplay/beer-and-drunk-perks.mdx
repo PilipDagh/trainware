@@ -1,0 +1,68 @@
+---
+title: Beer and drunk perks
+description: Place shareable beer barrels, gain combat boosts, and avoid the 11-sip explosion threshold.
+---
+
+Beer is both a buff and a hazard. A few sips give you faster movement and harder-hitting attacks. Push too far and your character explodes.
+
+## Beer items
+
+Two items are stocked at the saloon shop:
+
+| Item | Price | Use |
+| --- | --- | --- |
+| Beer Bottle | $3 | Refills a placed Beer Barrel by ~5 sips. |
+| Beer Barrel | $11 | Placeable container with 67 sips that the whole group can drink from. |
+
+Both are tracked separately in your inventory and don't affect your gold or silver totals.
+
+## Place a beer barrel
+
+<Steps>
+  <Step title="Buy a barrel">
+    Visit the shop in any town and buy a Beer Barrel for $11.
+  </Step>
+  <Step title="Place it on the train">
+    Stand where you want the barrel and press **B** to drop it.
+
+    ```text
+    PlayerName placed a Beer Barrel!
+    ```
+
+    Anyone in your group can walk up and drink from it.
+  </Step>
+  <Step title="Refill with bottles">
+    Stand next to a barrel that's below 67 sips while holding a Beer Bottle, then press **E** to top it up by ~5 sips per bottle. A single barrel can carry a crew through a whole run if you keep it topped off.
+  </Step>
+</Steps>
+
+## Drink and the drunk perk
+
+Walk up to a barrel and press **E** to take a sip. Each sip:
+
+- Removes one sip from the barrel.
+- Adds one to your sip count.
+- Starts a short drink cooldown so you can't chain sips instantly.
+
+Sip thresholds:
+
+<CardGroup cols={2}>
+  <Card title="3+ sips: drunk perk" icon="bolt">
+    +11% movement speed and +20% damage with the pistol and knife.
+  </Card>
+  <Card title="11 sips: explosion" icon="triangle-exclamation">
+    Your character explodes and dies. Pace yourself.
+  </Card>
+</CardGroup>
+
+A status message confirms the explosion to everyone in the lobby:
+
+```
+PlayerName drank too much and exploded!
+```
+
+## Strategy
+
+- **Hit three sips before a fight.** The combat boosts apply immediately at 3 sips and last while the drunk timer is active.
+- **Track your sip count.** Sips are cumulative and persist until your character dies or the run restarts.
+- **Coordinate the barrel.** Tell teammates how many sips are left so the whole group can plan around the next ambush.

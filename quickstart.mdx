@@ -1,0 +1,64 @@
+---
+title: Quickstart
+description: Run the server, create a lobby, invite friends, and start your first transcontinental run.
+---
+
+Use this guide to get a game running locally and play your first round with friends.
+
+## Prerequisites
+
+- Node.js 18 or later
+- A modern browser (Chrome, Firefox, Safari, or Edge) on desktop or mobile
+
+## Run the server
+
+<Steps>
+  <Step title="Install dependencies">
+    From the project root, install the server dependencies.
+
+    ```bash
+    npm install
+    ```
+  </Step>
+  <Step title="Start the server">
+    Launch the Express + Socket.IO server.
+
+    ```bash
+    npm start
+    ```
+
+    The server listens on port `3000` by default. Open `http://localhost:3000` in your browser to load the main menu.
+  </Step>
+  <Step title="Share the URL">
+    Anyone on the same network (or anyone you've port-forwarded to) can open the same URL to join your game.
+  </Step>
+</Steps>
+
+## Start your first run
+
+<Steps>
+  <Step title="Pick a name">
+    On the main menu, type a player name in the **Conductor** field. Each player in a lobby is assigned a unique color shown in the lobby roster.
+  </Step>
+  <Step title="Create or join a lobby">
+    - Select **Create Lobby** to host a new game. Set a lobby name, a player limit (up to 6), and an optional password to keep it private.
+    - Select **Join Lobby** to see the public lobby list. Private lobbies are marked with a lock icon and prompt for a password.
+  </Step>
+  <Step title="Start the game">
+    Once everyone has joined the lobby roster, the host selects **Start Game**. The menu disappears and the game canvas, HUD, and (on touch devices) on-screen controls appear.
+  </Step>
+  <Step title="Survive the run">
+    Mine ores, sell at the shop, refuel the engine, and fight off ambushes between towns. When everyone dies or you reach victory, vote to restart from the lobby.
+  </Step>
+</Steps>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Controls reference" icon="keyboard" href="/controls">
+    See every keyboard, mouse, and mobile control.
+  </Card>
+  <Card title="Train and fuel" icon="train" href="/gameplay/train-and-fuel">
+    Keep the engine running with mined coal.
+  </Card>
+</CardGroup>
