@@ -1,5 +1,22 @@
 # Changelog
 
+## Week of May 25, 2026
+
+### New features
+
+- **Settings menu.** A new Settings option on the main menu lets you tweak preferences before jumping into a game.
+- **Force mobile controls toggle.** Turn on the on-screen mobile controls from Settings even on desktop, handy for testing layouts or playing with a touchscreen monitor.
+- **Place beer barrels with a button.** Press **B** (or tap the new barrel button on mobile) to drop a Beer Barrel from your inventory without digging through menus.
+- **Barrel sip counter.** Placed barrels now show a live `sips left / 67` label above them so your group can tell at a glance how much beer is still in the keg.
+- **Drunk visual effects.** As your sip count climbs, the screen progressively distorts across three stages, giving you a visible cue that you're getting close to the explosion threshold.
+- **Train departure countdown HUD.** When someone hits the engine button, an on-screen warning with a live countdown appears for everyone in the lobby so no one misses the train.
+- **Beer bottles and barrels in the inventory panel.** The HUD now tracks your carried Beer Bottles and Beer Barrels alongside gold, silver, and coal.
+
+### Updates
+
+- **Wider mining reach.** The click radius for mining ores has been doubled, so you no longer need pixel-perfect aim to swing at a vein.
+- **Cancel a departure mid-countdown.** The engine button stays active while the train is in the departing state, letting you abort the countdown if a teammate is still scrambling back on board.
+
 ## Week of May 18, 2026
 
 ### New features
