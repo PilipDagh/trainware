@@ -1,0 +1,58 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Transcontinental Survival",
+  "colors": {
+    "primary": "#A0522D",
+    "light": "#D2B48C",
+    "dark": "#5C3317"
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get started",
+        "pages": [
+          "introduction",
+          "quickstart",
+          "controls"
+        ]
+      },
+      {
+        "group": "Multiplayer",
+        "pages": [
+          "multiplayer/lobbies",
+          "multiplayer/spectator-and-restart"
+        ]
+      },
+      {
+        "group": "Gameplay",
+        "pages": [
+          "gameplay/train-and-fuel",
+          "gameplay/combat-and-reload",
+          "gameplay/shop-and-economy",
+          "gameplay/beer-and-drunk-perks",
+          "gameplay/horse-riding"
+        ]
+      },
+      {
+        "group": "Reference",
+        "pages": [
+          "reference/changelog"
+        ]
+      }
+    ]
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/PilipDagh/trainware"
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/PilipDagh/trainware"
+    }
+  }
+}

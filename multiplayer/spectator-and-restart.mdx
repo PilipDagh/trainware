@@ -1,0 +1,40 @@
+---
+title: Spectator mode and restart voting
+description: Watch teammates after dying and vote as a group to start a new run.
+---
+
+Death isn't the end of your session. After dying you can spectate living teammates, and once the run finishes the lobby can vote to restart together.
+
+## Spectator mode
+
+When your character dies, the camera switches to a living teammate instead of kicking you back to the menu. Use the spectator button (or the spectator action on mobile) to cycle through surviving players.
+
+- You stay in the lobby and continue to receive game updates.
+- You can keep watching the run, including ambushes, town arrivals, and final stands.
+- Spectating ends automatically when the lobby restarts or the last living player dies.
+
+<Note>
+  Spectator mode is read-only. You can't shoot, place barrels, or interact with the world while dead.
+</Note>
+
+## Restart voting
+
+Once everyone in the lobby is dead, or the group reaches victory, a restart vote opens. Any player can vote to send the lobby back to the menu with stats reset for another run.
+
+### How the vote works
+
+- Each player can vote once per round.
+- The vote passes when **at least 50%** of players in the lobby vote to restart.
+- After each vote, every player sees a status message: `Restart vote: X/Y needed.`
+- When the threshold is reached, the lobby returns to the `LOBBY` state and player stats reset.
+
+### Reset on restart
+
+When a vote passes, the following resets for every player:
+
+- Health, ammo, and inventory
+- Drunk sips and timers
+- Position and spawn point
+- Death and spectator state
+
+The lobby roster, names, and colors persist so you can jump straight into the next run.

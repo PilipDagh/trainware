@@ -1,0 +1,49 @@
+---
+title: Combat and reload
+description: Shoot, reload on demand, throw bombs, and stab enemies in close quarters.
+---
+
+Combat covers four actions: shooting, reloading, throwing bombs, and stabbing. Each is bound to a dedicated control so you can react quickly during ambushes.
+
+## Shoot
+
+Aim with the mouse cursor and press the left mouse button to fire. The bullet travels along the line between your character and the cursor.
+
+- Base pistol damage is **30 per hit**.
+- Damage increases by **20%** when you've had three or more sips of beer (see [Beer and drunk perks](/gameplay/beer-and-drunk-perks)).
+
+## Manual reload
+
+Reload pulls from your **reserve ammo** on demand and tops off the magazine without wasting bullets, replacing the older auto-reload behavior.
+
+- Press **R** (or the **Reload** button on mobile) to reload at any time.
+- The HUD shows magazine ammo and reserve ammo separately so you can decide when to reload.
+- Reloading mid-magazine only consumes the rounds needed to fill it, not the whole magazine.
+
+<Tip>
+  Reload between waves and before town departures, not while a bandit is shooting at you. The reload action takes time during which you can't fire.
+</Tip>
+
+## Throw bombs
+
+Press **F** (or the **Bomb** button on mobile) to throw a bomb toward your cursor.
+
+- The bomb travels to the targeted world position and explodes on impact, damaging enemies in the area.
+- Bombs are limited; check your inventory in the HUD before relying on them.
+
+```js
+// Client-side input that triggers a bomb throw
+socket.emit('throwBomb', { x: worldX, y: worldY });
+```
+
+## Knife stab
+
+Press **Spacebar** (or the **Knife** button on mobile) to perform a melee stab in front of your character.
+
+- Base knife damage is **56 per hit**.
+- Damage increases by **20%** when you've had three or more sips of beer.
+- Use the knife to conserve bullets against single bandits or to finish off wounded enemies.
+
+## Enemy density
+
+Enemy spawn rates between towns have been dialed back significantly. Expect fewer ambush groups, fewer gunmen and knifemen per group, and far fewer bombers and horseback enemies, so early runs are more forgiving than the original tuning.
