@@ -1,5 +1,16 @@
 # Changelog
 
+## Week of May 11, 2026
+
+### New features
+
+- **Beer at the saloon.** Two new shop items are stocked in town: **Beer Bottles** ($3) for a quick refill and **Beer Barrels** ($11) you can place on the train for your group. Tracked separately in your inventory.
+
+### Updates
+
+- **Easier wilderness runs.** Enemy spawn rates between towns have been dialed back significantly. Expect fewer ambush groups, fewer gunmen and knifemen per group, and far fewer bombers and horseback enemies, so early runs are more forgiving.
+- **Town arrival warning.** You'll now get a heads-up as the train approaches a town, giving you time to prep before you pull in.
+
 ## Week of May 4, 2026
 
 ### New features
