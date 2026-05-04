@@ -1,5 +1,18 @@
 # Changelog
 
+## Week of June 8, 2026
+
+### Updates
+
+- **Towns and the world now scroll past the train.** Ores, enemies, horses, the shop NPC, and town backgrounds now move with the train as it travels, so the world feels like it's actually passing by instead of staying anchored in place.
+- **Town enemies spawn around the town.** When you pull into a station, hostiles now appear around the town itself rather than at fixed positions on the map, so encounters line up with where you actually are.
+- **Stragglers get teleported back instead of dying.** If the departure countdown ends while you're still off the train, you're now warped back to the caboose instead of exploding. No more lost runs from a slow sprint.
+- **You can no longer fall off a moving train.** Once the train leaves a stop, your character is kept inside the train's bounds until it stops again, replacing the previous instant-death penalty for stepping off mid-journey.
+
+### Bug fixes
+
+- **Town arrivals reset cleanly between stops.** The town position now resets when you leave a station, so the next town you arrive at is centered correctly instead of inheriting stale coordinates.
+
 ## Week of June 1, 2026
 
 ### New features
