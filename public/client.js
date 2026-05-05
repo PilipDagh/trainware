@@ -74,6 +74,7 @@ socket.on('lobbyList', (lobbies) => {
         div.className = 'lobby-item';
         div.innerHTML = `<span>${l.name} (${l.players}/${l.maxPlayers}) ${l.isPrivate ? '🔒' : ''}</span>`;
         const btn = document.createElement('button');
+        btn.className = 'menu-btn';
         btn.innerText = 'JOIN';
         btn.onclick = () => window.ui.joinLobby(l.id, l.isPrivate);
         div.appendChild(btn);
@@ -150,6 +151,7 @@ window.addEventListener('mousemove', (e) => {
 window.addEventListener('mousedown', (e) => {
     if (e.button === 0 && e.target.id === 'gameCanvas') {
         let myPlayer = gameState.players[socket.id];
+        let clickedOre = false;
         if (myPlayer && gameState.train.state === 'STOPPED') {
             let cx = canvas.width / 2; let cy = canvas.height / 2;
             let worldX = (mouseX - cx) + myPlayer.x;
@@ -157,11 +159,12 @@ window.addEventListener('mousedown', (e) => {
             for (let ore of gameState.ores) {
                 if (Math.hypot(worldX - ore.x, worldY - ore.y) < 100) {
                     socket.emit('mine', ore.id);
-                    return;
+                    clickedOre = true;
+                    break;
                 }
             }
         }
-        socket.emit('shoot');
+        if (!clickedOre) socket.emit('shoot');
     }
 });
 
@@ -419,7 +422,7 @@ function draw() {
         }
     }
 
-    // Scenery (Trees, Cacti, Snow)
+    // Scenery (Trees, Cacti, Snow) - Optimized
     let sceneryOffset = pixelDist % 600;
     for(let i = -2000; i < 2000; i+= 300) {
         let xPos = i - sceneryOffset + camX;
@@ -439,7 +442,7 @@ function draw() {
         });
     }
 
-    // Ground Lines
+    // Ground Lines - Optimized
     ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
     let groundOffset = pixelDist % 200;
     for(let i = -2000; i < 2000; i+= 200) {
