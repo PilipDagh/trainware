@@ -9,44 +9,44 @@
 <body>
     <!-- Main Menu & Lobby System -->
     <div id="menu-container">
-        <div id="main-menu">
-            <h1>Transcontinental Survival</h1>
-            <label>Name: <input type="text" id="playerName" value="Conductor" maxlength="12"></label><br><br>
-            <button onclick="showCreateLobby()">Create Lobby</button>
-            <button onclick="showJoinLobby()">Join Lobby</button>
-            <button onclick="showSettings()">Settings</button>
+        <div id="screen-main" class="menu-panel">
+            <h1>TRANSCONTINENTAL</h1>
+            <input type="text" id="playerName" value="Conductor" maxlength="12" placeholder="Your Name"><br>
+            <button onclick="window.ui.showScreen('screen-create')">CREATE LOBBY</button>
+            <button onclick="window.ui.showJoin()">JOIN LOBBY</button>
+            <button onclick="window.ui.showScreen('screen-settings')">SETTINGS</button>
         </div>
 
-        <div id="settings-menu" class="hidden">
-            <h2>Settings</h2>
+        <div id="screen-settings" class="menu-panel hidden">
+            <h2>SETTINGS</h2>
             <label class="setting-item">
                 <input type="checkbox" id="mobile-toggle"> Force Mobile Joysticks
-            </label><br>
-            <label class="setting-item">
-                <input type="checkbox" id="autolock-toggle"> Enable Auto-Lock On (Heat-Sync)
             </label><br><br>
-            <button onclick="saveSettings()">Save & Back</button>
+            <label class="setting-item">
+                <input type="checkbox" id="autolock-toggle"> Enable Auto-Lock (Heat-Sync)
+            </label><br><br>
+            <button onclick="window.ui.saveSettings()">SAVE & BACK</button>
         </div>
 
-        <div id="create-lobby" class="hidden">
-            <h2>Create Lobby</h2>
-            <label>Lobby Name: <input type="text" id="lobbyName" value="My Train"></label><br><br>
-            <label>Max Players: <input type="number" id="maxPlayers" min="1" max="6" value="6"></label><br><br>
-            <label>Password: <input type="text" id="lobbyPassword" placeholder="Optional"></label><br><br>
-            <button onclick="createLobby()">Create</button>
-            <button onclick="backToMain()">Back</button>
+        <div id="screen-create" class="menu-panel hidden">
+            <h2>CREATE LOBBY</h2>
+            <input type="text" id="lobbyName" value="My Train" placeholder="Lobby Name"><br>
+            <input type="number" id="maxPlayers" min="1" max="6" value="6" placeholder="Max Players"><br>
+            <input type="text" id="lobbyPassword" placeholder="Password (Optional)"><br>
+            <button onclick="window.ui.createLobby()">CREATE</button>
+            <button onclick="window.ui.showScreen('screen-main')">BACK</button>
         </div>
 
-        <div id="join-lobby" class="hidden">
-            <h2>Join Lobby</h2>
+        <div id="screen-join" class="menu-panel hidden">
+            <h2>JOIN LOBBY</h2>
             <div id="lobby-list"></div>
-            <button onclick="backToMain()" style="margin-top: 10px;">Back</button>
+            <button onclick="window.ui.showScreen('screen-main')" style="margin-top: 10px;">BACK</button>
         </div>
 
-        <div id="in-lobby" class="hidden">
-            <h2 id="lobby-title">Lobby</h2>
-            <ul id="lobby-players"></ul>
-            <button onclick="startGame()">Start Game</button>
+        <div id="screen-lobby" class="menu-panel hidden">
+            <h2 id="lobby-title">LOBBY</h2>
+            <ul id="player-list"></ul>
+            <button onclick="window.ui.startGame()">START GAME</button>
         </div>
     </div>
 
@@ -55,10 +55,16 @@
         <div id="stats">
             HP: <span id="hp">120</span> | Ammo: <span id="mag">5</span>/<span id="ammo">32</span> | $: <span id="money">0</span><br>
             Dist: <span id="dist">0</span>/3181 km | Biome: <span id="biome">Forest</span><br>
-            Fuel: <span id="fuel">1003</span> | Speed: <span id="speed">0</span> km/h<br>
+            Fuel: <span id="fuel">1003</span> | Speed: <span id="speed">0</span> km/h | Cold: <span id="cold">167</span><br>
             <span style="color: gold;">G: <span id="inv-gold">0</span></span> | 
             <span style="color: silver;">S: <span id="inv-silver">0</span></span> | 
-            <span style="color: #aaa;">C: <span id="inv-coal">0</span></span>
+            <span style="color: #aaa;">C: <span id="inv-coal">0</span></span><br>
+            <span style="color: #f39c12;">Bottles: <span id="inv-bottles">0</span></span> | 
+            <span style="color: #d35400;">Barrels: <span id="inv-barrels">0</span></span>
+        </div>
+        <div id="controls">
+            [WASD] Move | [Mouse] Aim | [Click] Shoot/Mine<br>[E] Interact/Dump/Drink | [R] Reload | [B] Place Barrel<br>
+            [F] Throw Bomb | [Space] Knife
         </div>
         <div id="messages"></div>
     </div>
@@ -95,22 +101,22 @@
     <div id="shop" class="hidden overlay-box">
         <h2>Town Shop</h2>
         <div id="shop-items"></div>
-        <button onclick="closeShop()">Close</button>
+        <button onclick="window.ui.closeShop()">Close</button>
     </div>
 
     <div id="death" class="hidden overlay-box">
         <h1>YOU DIED</h1>
-        <button onclick="spectateNext()">Spectate Next</button>
+        <button onclick="window.ui.spectateNext()">Spectate Next</button>
     </div>
 
     <div id="all-dead" class="hidden overlay-box">
         <h1>GAME OVER</h1>
-        <button onclick="voteRestart()">Vote Restart (50%)</button>
+        <button onclick="window.ui.voteRestart()">Vote Restart (50%)</button>
     </div>
 
     <div id="victory" class="hidden overlay-box">
         <h1>wowww you win Tyler wowwww!</h1>
-        <button onclick="voteRestart()">Vote Restart</button>
+        <button onclick="window.ui.voteRestart()">Vote Restart</button>
     </div>
 
     <canvas id="gameCanvas" class="hidden"></canvas>
