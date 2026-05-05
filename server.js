@@ -9,10 +9,10 @@ const io = new Server(server);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-const PLAYER_COLORS = ['#1f77b4', '#d62728', '#2ca02c', '#9467bd', '#ff7f0e', '#e377c2'];
+const PLAYER_COLORS =['#1f77b4', '#d62728', '#2ca02c', '#9467bd', '#ff7f0e', '#e377c2'];
 const rooms = {};
 
-const BIOMES = [
+const BIOMES =[
     { name: 'forest', end: 974 }, { name: 'desert', end: 1521 },
     { name: 'tundra', end: 1908 }, { name: 'desert', end: 2455 }, { name: 'forest', end: 3181 }
 ];
@@ -25,7 +25,7 @@ function getBiome(dist) {
 function createRoomState(id, name, password, maxPlayers) {
     return {
         id, name, password, maxPlayers: parseInt(maxPlayers) || 6, status: 'LOBBY',
-        players: {}, enemies: [], ores: [], projectiles: [], bombs: [], horses: [], barrels: [],
+        players: {}, enemies:[], ores: [], crates: [], projectiles: [], bombs: [], horses: [], barrels:[],
         train: {
             distance: 0, speed: 0, maxSpeed: 35, state: 'STOPPED', 
             fuel: 1003, maxFuel: 1003, buttonCooldown: 0, departureTimer: 0,
@@ -35,14 +35,14 @@ function createRoomState(id, name, password, maxPlayers) {
         },
         townX: null, biome: 'forest', inMountains: false,
         mountainStart: Math.random() * (200 - 50) + 50, mountainEnd: 0,
-        avalanche: { active: false, timer: 0 }, avalancheRocks: [],
+        avalanche: { active: false, timer: 0 }, avalancheRocks:[],
         raidTimer: 0, raidActive: false, avalancheTimer: 0,
-        shop: { active: false, items: [] }, shopNPC: null, votes: 0
+        shop: { active: false, items:[] }, shopNPC: null, votes: 0
     };
 }
 
 function spawnOres(room) {
-    room.ores = [];
+    room.ores =[];
     for (let i = 0; i < 25; i++) {
         let rand = Math.random();
         let type = rand < 0.1 ? 'gold' : (rand < 0.3 ? 'silver' : 'coal');
@@ -56,8 +56,21 @@ function spawnOres(room) {
     }
 }
 
+function spawnCrates(room) {
+    room.crates =[];
+    // Spawns 1 to 3 crates per stop (much rarer than ores)
+    let numCrates = Math.floor(Math.random() * 3) + 1;
+    for (let i = 0; i < numCrates; i++) {
+        let x, y;
+        do {
+            x = (Math.random() - 0.5) * 1400;
+            y = (Math.random() - 0.5) * 1000;
+        } while (x >= -400 && x <= 280 && y >= -50 && y <= 50); 
+        room.crates.push({ id: Math.random().toString(), x, y });
+    }
+}
+
 function spawnEnemies(room, isTown, isRaid = false) {
-    // Max 3 groups per stop, smaller sizes, highly spread out
     let groups = isTown ? Math.floor(Math.random() * 2) + 1 : 1; 
     if (isRaid) groups = 1;
 
@@ -65,7 +78,6 @@ function spawnEnemies(room, isTown, isRaid = false) {
         let baseX = room.townX !== null ? room.townX + (Math.random() > 0.5 ? 300 : -300) : (Math.random() > 0.5 ? 600 : -600);
         let baseY = (Math.random() - 0.5) * 600;
 
-        // Smaller groups: 1 gunman, 1 knifeman, rare bombman
         createEnemy(room, 'gunman', baseX, baseY, isRaid);
         createEnemy(room, 'knifeman', baseX, baseY, isRaid);
         if (Math.random() < 0.15) {
@@ -77,7 +89,6 @@ function spawnEnemies(room, isTown, isRaid = false) {
 function createEnemy(room, type, x, y, isRaid) {
     room.enemies.push({
         id: Math.random().toString(), type, isRaid,
-        // Highly spread out offsets to prevent clumping
         x: x + (Math.random() - 0.5) * 300, 
         y: y + (Math.random() - 0.5) * 300,
         hp: type === 'gunman' ? 30 : 40,
@@ -88,7 +99,7 @@ function createEnemy(room, type, x, y, isRaid) {
 
 function generateShop(room) {
     room.shop.active = true;
-    room.shop.items = [
+    room.shop.items =[
         { id: 'bomb', name: 'Bomb', cost: 5, type: 'player' },
         { id: 'bandage', name: 'Bandage (+50 HP)', cost: 2, type: 'player' },
         { id: 'clothes', name: 'Warm Clothes', cost: 11, type: 'player' },
@@ -167,7 +178,6 @@ io.on('connection', (socket) => {
         p.x += data.dx * speed * 0.033;
         p.y += data.dy * speed * 0.033;
 
-        // DELAYED TRAIN BARRIER: Only active when actually moving, NOT during departure
         let isMoving =['ACCELERATING', 'MOVING', 'SLOWING'].includes(room.train.state);
         if (isMoving) {
             p.x = Math.max(-400, Math.min(280, p.x));
@@ -316,7 +326,26 @@ io.on('connection', (socket) => {
         let room = rooms[socket.roomId];
         if (!room || !room.players[socket.id]) return;
         let p = room.players[socket.id];
-        if (p.dead || !p.hasKnife) return;
+        if (p.dead) return;
+        
+        // CRATES (Can be broken even without buying the knife)
+        for (let i = room.crates.length - 1; i >= 0; i--) {
+            let c = room.crates[i];
+            if (Math.hypot(p.x - c.x, p.y - c.y) < 50) {
+                room.crates.splice(i, 1);
+                if (Math.random() < 0.5) {
+                    let ammo = Math.floor(Math.random() * 23) + 20; // 20 to 42 ammo
+                    p.bullets += ammo;
+                    socket.emit('msg', `Crate broken! Found ${ammo} Ammo!`);
+                } else {
+                    p.hp = Math.min(p.maxHp, p.hp + 50);
+                    socket.emit('msg', `Crate broken! Found a Medkit (+50 HP)!`);
+                }
+            }
+        }
+
+        // ENEMIES (Requires the actual Knife item)
+        if (!p.hasKnife) return;
         let dmg = (p.drunk.sips >= 3) ? 56 * 1.2 : 56;
         for (let i = room.enemies.length - 1; i >= 0; i--) {
             let e = room.enemies[i];
@@ -372,7 +401,6 @@ io.on('connection', (socket) => {
         if (!p.dead || p.voted) return;
         p.voted = true; room.votes++;
         
-        // FIXED VOTE RESTART LOGIC (50%)
         let total = Object.keys(room.players).length;
         if (room.votes >= Math.ceil(total * 0.5)) { 
             io.to(room.id).emit('msg', 'Vote passed! Restarting...');
@@ -403,7 +431,7 @@ function checkAllDead(room) {
 function resetRoom(room) {
     room.status = 'LOBBY'; room.votes = 0;
     room.train = { distance: 0, speed: 0, maxSpeed: 35, state: 'STOPPED', fuel: 1003, maxFuel: 1003, buttonCooldown: 0, departureTimer: 0, speedMultiplier: 1, speedUpgraded: false, fuelUpgrades: 0, nextTownDist: Math.random() * (497 - 274) + 274, inTown: false, townWarningSent: false };
-    room.enemies = []; room.ores = []; room.projectiles =[]; room.bombs =[]; room.horses =[]; room.barrels = []; room.avalancheRocks =[]; room.shopNPC = null; room.townX = null;
+    room.enemies = []; room.ores = []; room.crates =[]; room.projectiles =[]; room.bombs =[]; room.horses = []; room.barrels = []; room.avalancheRocks =[]; room.shopNPC = null; room.townX = null;
     for (let id in room.players) {
         let p = room.players[id];
         p.hp = 120; p.dead = false; p.money = 0; p.bullets = 32; p.mag = 5; p.bombs = 0; p.hasClothes = false; p.hasKnife = false; p.regen = 0;
@@ -427,16 +455,18 @@ setInterval(() => {
             room.train.departureTimer -= dt;
             if (room.train.departureTimer <= 0) {
                 room.train.state = 'ACCELERATING';
-                // KILL PLAYERS LEFT BEHIND
+                // TELEPORT PLAYERS LEFT BEHIND TO CABOOSE
                 for (let id in room.players) {
                     let p = room.players[id];
                     if (!p.onTrain && !p.dead) {
-                        p.dead = true; p.hp = 0;
-                        io.to(room.id).emit('msg', `${p.name} was left behind and exploded!`);
+                        p.x = -350; // Caboose X coordinate
+                        p.y = 0;
+                        io.to(room.id).emit('msg', `${p.name} scrambled onto the moving train!`);
                     }
                 }
                 checkAllDead(room);
 
+                // OBLITERATE ENEMIES LEFT BEHIND
                 let enemiesKilled = false;
                 room.enemies = room.enemies.filter(e => {
                     let onTrain = (e.x >= -400 && e.x <= 280 && e.y >= -50 && e.y <= 50);
@@ -456,7 +486,10 @@ setInterval(() => {
                 room.train.state = 'STOPPED';
                 room.train.buttonCooldown = 3;
                 
-                // NEW: 37% CHANCE FOR A TOWN TO SPAWN WHEN STOPPED
+                // Spawn Crates every time the train stops
+                spawnCrates(room);
+
+                // 37% CHANCE FOR A TOWN TO SPAWN WHEN STOPPED
                 if (Math.random() < 0.37) {
                     room.train.inTown = true;
                     generateShop(room);
@@ -481,7 +514,9 @@ setInterval(() => {
             room.train.fuel -= 17 * dt;
             if (room.train.fuel <= 0) { room.train.fuel = 0; room.train.state = 'SLOWING'; }
 
+            // Scroll all world objects
             room.ores.forEach(o => o.x -= dx);
+            room.crates.forEach(c => c.x -= dx); // Scroll crates
             room.enemies.forEach(e => e.x -= dx);
             room.horses.forEach(h => h.x -= dx);
             room.avalancheRocks.forEach(r => r.x -= dx);
