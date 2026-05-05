@@ -136,7 +136,7 @@ window.addEventListener('keydown', (e) => {
             socket.emit('throwBomb', { x: p.x + Math.cos(p.aimAngle)*150, y: p.y + Math.sin(p.aimAngle)*150 });
         }
     }
-    if (e.key === ' ') socket.emit('stab');
+    if (e.key === ' ') socket.emit('stab'); // Knife / Break Crate
 });
 window.addEventListener('keyup', (e) => { if (keys.hasOwnProperty(e.key.toLowerCase())) keys[e.key.toLowerCase()] = false; });
 
@@ -220,7 +220,6 @@ const bindMobileBtn = (id, action) => {
 };
 
 bindMobileBtn('btn-shoot', () => {
-    // Dynamic Mine/Shoot logic for mobile button
     let myPlayer = gameState.players[socket.id];
     let isMining = false;
     if (myPlayer && gameState.train.state === 'STOPPED') {
@@ -237,7 +236,7 @@ bindMobileBtn('btn-shoot', () => {
 bindMobileBtn('btn-interact', () => socket.emit('interact'));
 bindMobileBtn('btn-reload', () => socket.emit('reload'));
 bindMobileBtn('btn-barrel', () => socket.emit('placeBarrel'));
-bindMobileBtn('btn-knife', () => socket.emit('stab'));
+bindMobileBtn('btn-knife', () => socket.emit('stab')); // Also used for breaking crates
 bindMobileBtn('btn-bomb', () => {
     if (gameState && gameState.players[socket.id]) {
         let p = gameState.players[socket.id];
@@ -267,15 +266,23 @@ function updateUI() {
     document.getElementById('inv-bottles').innerText = p.inventory.beerBottles;
     document.getElementById('inv-barrels').innerText = p.inventory.beerBarrels;
 
-    // Dynamic Mine/Shoot Button Text
+    // Dynamic Mine/Shoot & Break/Knife Button Text
     let canMine = false;
+    let canBreak = false;
     if (gameState.train.state === 'STOPPED') {
         for (let ore of gameState.ores) {
             if (Math.hypot(p.x - ore.x, p.y - ore.y) < 100) { canMine = true; break; }
         }
+        if (gameState.crates) {
+            for (let crate of gameState.crates) {
+                if (Math.hypot(p.x - crate.x, p.y - crate.y) < 60) { canBreak = true; break; }
+            }
+        }
     }
+    
     document.getElementById('btn-shoot').innerText = canMine ? 'MINE' : 'FIRE';
     document.getElementById('pc-action-text').innerText = canMine ? 'Mine' : 'Shoot';
+    document.getElementById('btn-knife').innerText = canBreak ? 'BREAK' : 'KNIFE';
 
     let depWarning = document.getElementById('departure-warning');
     if (gameState.train.state === 'DEPARTING') {
@@ -498,6 +505,21 @@ function draw() {
         ctx.beginPath(); ctx.arc(ore.x, ore.y, 15 + (ore.maxHits * 2), 0, Math.PI * 2); ctx.fill();
         ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
     });
+
+    // Crates
+    if (gameState.crates) {
+        gameState.crates.forEach(c => {
+            ctx.fillStyle = '#8b5a2b'; // Brown wood
+            ctx.fillRect(c.x - 15, c.y - 15, 30, 30);
+            ctx.strokeStyle = '#3e1f04'; ctx.lineWidth = 2;
+            ctx.strokeRect(c.x - 15, c.y - 15, 30, 30);
+            // Draw 'X' on crate
+            ctx.beginPath();
+            ctx.moveTo(c.x - 15, c.y - 15); ctx.lineTo(c.x + 15, c.y + 15);
+            ctx.moveTo(c.x + 15, c.y - 15); ctx.lineTo(c.x - 15, c.y + 15);
+            ctx.stroke();
+        });
+    }
 
     // Shop NPC
     if (gameState.shopNPC) {
