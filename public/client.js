@@ -51,9 +51,7 @@ window.ui = {
         socket.emit('joinLobby', { roomId, password, playerName });
     },
     saveSettings: () => {
-        const settings = {
-            hasAutoLock: document.getElementById('autolock-toggle').checked
-        };
+        const settings = { hasAutoLock: document.getElementById('autolock-toggle').checked };
         socket.emit('updateSettings', settings);
         window.ui.showScreen('screen-main');
     },
@@ -70,13 +68,13 @@ window.ui = {
 // --- SOCKET LISTENERS ---
 socket.on('lobbyList', (lobbies) => {
     const list = document.getElementById('lobby-list');
-    list.innerHTML = lobbies.length ? '' : '<p>No public lobbies found.</p>';
+    list.innerHTML = lobbies.length ? '' : '<p style="text-align:center;">No public trains found.</p>';
     lobbies.forEach(l => {
         const div = document.createElement('div');
         div.className = 'lobby-item';
         div.innerHTML = `<span>${l.name} (${l.players}/${l.maxPlayers}) ${l.isPrivate ? '🔒' : ''}</span>`;
         const btn = document.createElement('button');
-        btn.innerText = 'Join';
+        btn.innerText = 'JOIN';
         btn.onclick = () => window.ui.joinLobby(l.id, l.isPrivate);
         div.appendChild(btn);
         list.appendChild(div);
@@ -91,7 +89,7 @@ socket.on('lobbyCreated', (roomId) => {
 
 socket.on('lobbyUpdate', (room) => {
     window.ui.showScreen('screen-lobby');
-    document.getElementById('lobby-title').innerText = `Lobby: ${room.name}`;
+    document.getElementById('lobby-title').innerText = `TRAIN: ${room.name}`;
     document.getElementById('player-list').innerHTML = Object.values(room.players)
         .map(p => `<li style="color:${p.color}">${p.name}</li>`).join('');
 });
@@ -118,7 +116,7 @@ socket.on('openShop', () => {
     const cont = document.getElementById('shop-items');
     cont.innerHTML = gameState.shop.items.map(i => {
         let stock = i.stock !== undefined ? ` (${i.stock} left)` : '';
-        return `<button onclick="socket.emit('buy', '${i.id}')">${i.name} - $${i.cost}${stock}</button>`;
+        return `<button class="menu-btn" onclick="socket.emit('buy', '${i.id}')">${i.name} - $${i.cost}${stock}</button>`;
     }).join('');
 });
 socket.on('allDead', () => document.getElementById('all-dead').classList.remove('hidden'));
@@ -144,7 +142,6 @@ window.addEventListener('keyup', (e) => { if (keys.hasOwnProperty(e.key.toLowerC
 window.addEventListener('mousemove', (e) => {
     mouseX = e.clientX; mouseY = e.clientY;
     if (gameState && gameState.players[socket.id]) {
-        let p = gameState.players[socket.id];
         let cx = canvas.width / 2; let cy = canvas.height / 2;
         socket.emit('aim', Math.atan2(mouseY - cy, mouseX - cx));
     }
@@ -218,7 +215,22 @@ const bindMobileBtn = (id, action) => {
     const btn = document.getElementById(id);
     if (btn) btn.addEventListener('touchstart', (e) => { e.preventDefault(); action(); }, { passive: false });
 };
-bindMobileBtn('btn-shoot', () => socket.emit('shoot'));
+
+bindMobileBtn('btn-shoot', () => {
+    // Dynamic Mine/Shoot logic for mobile button
+    let myPlayer = gameState.players[socket.id];
+    let isMining = false;
+    if (myPlayer && gameState.train.state === 'STOPPED') {
+        for (let ore of gameState.ores) {
+            if (Math.hypot(myPlayer.x - ore.x, myPlayer.y - ore.y) < 100) {
+                socket.emit('mine', ore.id);
+                isMining = true; break;
+            }
+        }
+    }
+    if (!isMining) socket.emit('shoot');
+});
+
 bindMobileBtn('btn-interact', () => socket.emit('interact'));
 bindMobileBtn('btn-reload', () => socket.emit('reload'));
 bindMobileBtn('btn-barrel', () => socket.emit('placeBarrel'));
@@ -252,6 +264,16 @@ function updateUI() {
     document.getElementById('inv-bottles').innerText = p.inventory.beerBottles;
     document.getElementById('inv-barrels').innerText = p.inventory.beerBarrels;
 
+    // Dynamic Mine/Shoot Button Text
+    let canMine = false;
+    if (gameState.train.state === 'STOPPED') {
+        for (let ore of gameState.ores) {
+            if (Math.hypot(p.x - ore.x, p.y - ore.y) < 100) { canMine = true; break; }
+        }
+    }
+    document.getElementById('btn-shoot').innerText = canMine ? 'MINE' : 'FIRE';
+    document.getElementById('pc-action-text').innerText = canMine ? 'Mine' : 'Shoot';
+
     let depWarning = document.getElementById('departure-warning');
     if (gameState.train.state === 'DEPARTING') {
         depWarning.classList.remove('hidden');
@@ -271,7 +293,7 @@ function drawHumanoid(x, y, color, angle, hasKnife, onHorse, isEnemy, enemyType,
     ctx.translate(x, y);
     
     if (name) {
-        ctx.fillStyle = 'white'; ctx.font = '12px monospace'; ctx.textAlign = 'center';
+        ctx.fillStyle = 'white'; ctx.font = 'bold 12px monospace'; ctx.textAlign = 'center';
         ctx.fillText(name, 0, -30);
     }
 
@@ -341,7 +363,7 @@ function drawTrain() {
             ctx.fillStyle = '#0a0a0a';
             for(let i=10; i<car.w-10; i+=15) for(let j=10; j<car.h-10; j+=15) ctx.fillRect(i, j, 12, 12);
             ctx.fillStyle = '#ffaa00'; ctx.fillRect(40, 25, 20, 20);
-            ctx.fillStyle = '#fff'; ctx.font = '10px monospace'; ctx.fillText('DUMP', 38, 40);
+            ctx.fillStyle = '#fff'; ctx.font = 'bold 10px monospace'; ctx.fillText('DUMP', 38, 40);
 
         } else if (car.id.startsWith('pass')) {
             ctx.fillStyle = '#6b4423'; ctx.fillRect(0, 0, car.w, car.h);
@@ -426,21 +448,34 @@ function draw() {
         }
     }
 
+    // ACTUAL TOWNS
+    if (gameState.townX !== null) {
+        // Dirt Road
+        ctx.fillStyle = '#8b5a2b';
+        ctx.fillRect(gameState.townX - 400, -300, 800, 600);
+        
+        // Saloon
+        ctx.fillStyle = '#5d2e0a'; ctx.fillRect(gameState.townX - 150, -250, 120, 100);
+        ctx.fillStyle = '#3e1f04'; ctx.fillRect(gameState.townX - 160, -260, 140, 20); // Roof
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 16px monospace'; ctx.fillText('SALOON', gameState.townX - 90, -220);
+        
+        // General Store
+        ctx.fillStyle = '#6b4423'; ctx.fillRect(gameState.townX + 50, -250, 120, 100);
+        ctx.fillStyle = '#3e1f04'; ctx.fillRect(gameState.townX + 40, -260, 140, 20); // Roof
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 16px monospace'; ctx.fillText('STORE', gameState.townX + 110, -220);
+
+        // Bank
+        ctx.fillStyle = '#8b4513'; ctx.fillRect(gameState.townX - 150, 150, 120, 100);
+        ctx.fillStyle = '#3e1f04'; ctx.fillRect(gameState.townX - 160, 140, 140, 20); // Roof
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 16px monospace'; ctx.fillText('BANK', gameState.townX - 90, 180);
+    }
+
     // Tracks
     let tieOffset = pixelDist % 40;
     ctx.fillStyle = '#4a3c31'; 
     for(let i = -2000; i < 2000; i+= 40) ctx.fillRect(i - tieOffset + camX, -35, 10, 70);
     ctx.fillStyle = '#777'; 
     ctx.fillRect(-2000 + camX, -25, 4000, 6); ctx.fillRect(-2000 + camX, 19, 4000, 6);
-
-    // Towns
-    if (gameState.townX !== null) {
-        ctx.fillStyle = '#a0522d';
-        for (let i = -5; i < 5; i++) {
-            ctx.fillRect(gameState.townX + i * 150 - 50, 100, 100, 100);
-            ctx.fillRect(gameState.townX + i * 150 - 50, -200, 100, 100);
-        }
-    }
 
     // Avalanche Rocks
     if (gameState.avalancheRocks && gameState.avalancheRocks.length > 0) {
@@ -464,7 +499,7 @@ function draw() {
     // Shop NPC
     if (gameState.shopNPC) {
         ctx.fillStyle = '#00f'; ctx.fillRect(gameState.shopNPC.x - 10, gameState.shopNPC.y - 10, 20, 20);
-        ctx.fillStyle = '#fff'; ctx.font = '12px monospace'; ctx.fillText('SHOP', gameState.shopNPC.x - 12, gameState.shopNPC.y - 15);
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 12px monospace'; ctx.fillText('SHOP', gameState.shopNPC.x, gameState.shopNPC.y - 15);
     }
 
     // Horses
@@ -480,7 +515,7 @@ function draw() {
     gameState.barrels.forEach(b => {
         ctx.fillStyle = '#8b4513'; ctx.fillRect(b.x - 15, b.y - 20, 30, 40);
         ctx.fillStyle = '#222'; ctx.fillRect(b.x - 15, b.y - 10, 30, 4); ctx.fillRect(b.x - 15, b.y + 6, 30, 4);
-        ctx.fillStyle = '#fff'; ctx.font = '10px monospace'; ctx.fillText(`${b.sipsLeft}/67`, b.x - 14, b.y - 25);
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 10px monospace'; ctx.fillText(`${b.sipsLeft}/67`, b.x, b.y - 25);
     });
 
     // Enemies
