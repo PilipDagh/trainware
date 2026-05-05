@@ -1,42 +1,73 @@
 body {
     margin: 0; overflow: hidden; background-color: #111;
     color: white; font-family: 'Courier New', Courier, monospace;
-    touch-action: none; user-select: none;
+    touch-action: none; user-select: none; /* Prevents mobile zooming/scrolling */
 }
 
 canvas { display: block; transition: filter 0.5s, transform 0.5s; }
 
 /* Drunk Effects */
-@keyframes drunkWavy {
+@keyframes drunkWavy1 {
     0% { transform: scale(1) rotate(0deg); filter: hue-rotate(0deg); }
-    33% { transform: scale(1.02) rotate(2deg); filter: hue-rotate(90deg); }
-    66% { transform: scale(0.98) rotate(-2deg); filter: hue-rotate(180deg); }
-    100% { transform: scale(1) rotate(0deg); filter: hue-rotate(360deg); }
+    50% { transform: scale(1.02) rotate(2deg); filter: hue-rotate(45deg); }
+    100% { transform: scale(1) rotate(0deg); filter: hue-rotate(0deg); }
 }
-.drunk-active { animation: drunkWavy 5s infinite ease-in-out; filter: contrast(1.2) saturate(1.5); }
+@keyframes drunkWavy2 {
+    0% { transform: scale(1.02) rotate(-2deg); filter: hue-rotate(0deg); }
+    50% { transform: scale(1.05) rotate(4deg); filter: hue-rotate(120deg); }
+    100% { transform: scale(1.02) rotate(-2deg); filter: hue-rotate(0deg); }
+}
+@keyframes drunkWavy3 {
+    0% { transform: scale(1.05) rotate(-4deg); filter: hue-rotate(0deg) blur(1px); }
+    50% { transform: scale(1.1) rotate(6deg); filter: hue-rotate(240deg) blur(3px); }
+    100% { transform: scale(1.05) rotate(-4deg); filter: hue-rotate(360deg) blur(1px); }
+}
+
+.drunk-1 { animation: drunkWavy1 4s infinite ease-in-out; }
+.drunk-2 { animation: drunkWavy2 3s infinite ease-in-out; }
+.drunk-3 { animation: drunkWavy3 1.5s infinite ease-in-out; }
 
 /* Menu & UI */
-#menu-container {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: radial-gradient(circle, #333 0%, #000 100%);
-    display: flex; align-items: center; justify-content: center; z-index: 100;
-}
-#menu-container div {
-    background: rgba(0,0,0,0.8); padding: 30px; border: 2px solid #8b4513;
-    border-radius: 15px; text-align: center; min-width: 320px;
-}
 .hidden { display: none !important; }
 
+#menu-container {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: radial-gradient(circle, #333 0%, #000 100%);
+    display: flex; align-items: center; justify-content: center; z-index: 1000;
+}
+.menu-panel {
+    background: rgba(0,0,0,0.9); padding: 30px; border: 3px solid #8b4513;
+    border-radius: 15px; text-align: center; min-width: 320px;
+}
+
+input {
+    display: block; width: 90%; padding: 10px; margin: 10px auto;
+    background: #111; color: #fff; border: 1px solid #8b4513; font-family: inherit;
+}
+
 button {
-    padding: 10px 15px; margin: 5px; background: #5d2e0a; color: white;
-    border: 1px solid #8b4513; cursor: pointer; font-family: inherit;
+    padding: 12px 20px; margin: 5px; background: #5d2e0a; color: white;
+    border: 1px solid #8b4513; cursor: pointer; font-family: inherit; font-weight: bold;
 }
 button:hover { background: #8b4513; }
 
+#lobby-list { max-height: 200px; overflow-y: auto; text-align: left; margin-bottom: 10px; }
+.lobby-item { padding: 10px; border-bottom: 1px solid #444; display: flex; justify-content: space-between; align-items: center; }
+#player-list { list-style: none; padding: 0; font-size: 18px; font-weight: bold; }
+
 #stats {
     position: absolute; top: 10px; left: 10px; pointer-events: none;
-    background: rgba(0,0,0,0.6); padding: 10px; border-radius: 5px; font-size: 14px;
+    background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; font-size: 14px; z-index: 10;
 }
+#controls {
+    position: absolute; top: 10px; right: 10px; pointer-events: none;
+    background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; font-size: 12px; text-align: right; z-index: 10;
+}
+#messages {
+    position: absolute; top: 120px; left: 10px; color: #ff4444; font-weight: bold; font-size: 20px;
+    background: rgba(0,0,0,0.5); padding: 5px; border-radius: 5px; z-index: 10;
+}
+#messages:empty { display: none; }
 
 #departure-warning {
     position: absolute; top: 25%; left: 50%; transform: translateX(-50%);
@@ -48,7 +79,7 @@ button:hover { background: #8b4513; }
 .joystick-base {
     position: absolute; width: 120px; height: 120px;
     background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3);
-    border-radius: 50%; bottom: 40px; pointer-events: auto;
+    border-radius: 50%; bottom: 40px; pointer-events: auto; z-index: 50;
 }
 #move-joystick-container { left: 40px; }
 #aim-joystick-container { right: 40px; }
@@ -61,12 +92,12 @@ button:hover { background: #8b4513; }
 
 /* Mobile Action Buttons */
 #mobile-actions {
-    position: absolute; bottom: 180px; right: 20px;
-    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;
+    position: absolute; bottom: 180px; left: 50%; transform: translateX(-50%);
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; z-index: 50;
 }
 #mobile-actions button {
-    width: 60px; height: 60px; border-radius: 50%; font-size: 10px;
-    background: rgba(255,255,255,0.2); border: 1px solid white;
+    width: 60px; height: 60px; border-radius: 50%; font-size: 12px;
+    background: rgba(255,255,255,0.2); border: 2px solid white; padding: 0; margin: 0;
 }
 
 .overlay-box {
@@ -74,3 +105,4 @@ button:hover { background: #8b4513; }
     background: rgba(0,0,0,0.95); padding: 25px; border: 2px solid #fff;
     text-align: center; z-index: 200; border-radius: 10px;
 }
+#shop-items button { display: block; width: 100%; margin-bottom: 5px; }
