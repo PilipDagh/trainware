@@ -9,10 +9,10 @@ const io = new Server(server);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-const PLAYER_COLORS =['#1f77b4', '#d62728', '#2ca02c', '#9467bd', '#ff7f0e', '#e377c2'];
+const PLAYER_COLORS = ['#1f77b4', '#d62728', '#2ca02c', '#9467bd', '#ff7f0e', '#e377c2'];
 const rooms = {};
 
-const BIOMES =[
+const BIOMES = [
     { name: 'forest', end: 974 }, { name: 'desert', end: 1521 },
     { name: 'tundra', end: 1908 }, { name: 'desert', end: 2455 }, { name: 'forest', end: 3181 }
 ];
@@ -25,7 +25,7 @@ function getBiome(dist) {
 function createRoomState(id, name, password, maxPlayers) {
     return {
         id, name, password, maxPlayers: parseInt(maxPlayers) || 6, status: 'LOBBY',
-        players: {}, enemies: [], ores:[], projectiles: [], bombs: [], horses: [], barrels:[],
+        players: {}, enemies: [], ores: [], projectiles: [], bombs: [], horses: [], barrels: [],
         train: {
             distance: 0, speed: 0, maxSpeed: 35, state: 'STOPPED', 
             fuel: 1003, maxFuel: 1003, buttonCooldown: 0, departureTimer: 0,
@@ -35,15 +35,15 @@ function createRoomState(id, name, password, maxPlayers) {
         },
         townX: null, biome: 'forest', inMountains: false,
         mountainStart: Math.random() * (200 - 50) + 50, mountainEnd: 0,
-        avalanche: { active: false, timer: 0 }, avalancheRocks:[],
+        avalanche: { active: false, timer: 0 }, avalancheRocks: [],
         raidTimer: 0, raidActive: false, avalancheTimer: 0,
-        shop: { active: false, items:[] }, shopNPC: null, votes: 0
+        shop: { active: false, items: [] }, shopNPC: null, votes: 0
     };
 }
 
 function spawnOres(room) {
-    room.ores =[];
-    for (let i = 0; i < 30; i++) {
+    room.ores = [];
+    for (let i = 0; i < 25; i++) {
         let rand = Math.random();
         let type = rand < 0.1 ? 'gold' : (rand < 0.3 ? 'silver' : 'coal');
         let hits = type === 'gold' ? Math.floor(Math.random() * 6) + 4 : (type === 'silver' ? Math.floor(Math.random() * 4) + 2 : Math.floor(Math.random() * 3) + 2);
@@ -57,27 +57,29 @@ function spawnOres(room) {
 }
 
 function spawnEnemies(room, isTown, isRaid = false) {
-    // MASSIVE NERF TO ENEMY SPAWNS
-    let groups = 0;
-    if (isTown) groups = 1; // Only 1 group in towns
-    else if (isRaid) groups = 2; // 2 groups for raids
-    else if (Math.random() < 0.15) groups = 1; // Only 15% chance for 1 group in wilderness
+    // Max 3 groups per stop, smaller sizes, highly spread out
+    let groups = isTown ? Math.floor(Math.random() * 2) + 1 : 1; 
+    if (isRaid) groups = 1;
 
     for (let g = 0; g < groups; g++) {
-        let baseX = room.townX !== null ? room.townX + (Math.random() > 0.5 ? 200 : -200) : (Math.random() > 0.5 ? 700 : -700);
-        let baseY = (Math.random() > 0.5 ? 400 : -400);
+        let baseX = room.townX !== null ? room.townX + (Math.random() > 0.5 ? 300 : -300) : (Math.random() > 0.5 ? 600 : -600);
+        let baseY = (Math.random() - 0.5) * 600;
 
-        // Max 2 gunmen, 1 knifeman per group
-        for (let i = 0; i < 2; i++) createEnemy(room, 'gunman', baseX, baseY, isRaid);
-        createEnemy(room, 'knifeman', baseX, baseY, isRaid); 
-        if (Math.random() < 0.10) createEnemy(room, 'bombman', baseX, baseY, isRaid);
+        // Smaller groups: 1 gunman, 1 knifeman, rare bombman
+        createEnemy(room, 'gunman', baseX, baseY, isRaid);
+        createEnemy(room, 'knifeman', baseX, baseY, isRaid);
+        if (Math.random() < 0.15) {
+            createEnemy(room, 'bombman', baseX, baseY, isRaid);
+        }
     }
 }
 
 function createEnemy(room, type, x, y, isRaid) {
     room.enemies.push({
         id: Math.random().toString(), type, isRaid,
-        x: x + (Math.random() - 0.5) * 150, y: y + (Math.random() - 0.5) * 150,
+        // Highly spread out offsets to prevent clumping
+        x: x + (Math.random() - 0.5) * 300, 
+        y: y + (Math.random() - 0.5) * 300,
         hp: type === 'gunman' ? 30 : 40,
         hasHorse: !isRaid && Math.random() < 0.20, 
         lastShot: 0, aimAngle: 0
@@ -86,7 +88,7 @@ function createEnemy(room, type, x, y, isRaid) {
 
 function generateShop(room) {
     room.shop.active = true;
-    room.shop.items =[
+    room.shop.items = [
         { id: 'bomb', name: 'Bomb', cost: 5, type: 'player' },
         { id: 'bandage', name: 'Bandage (+50 HP)', cost: 2, type: 'player' },
         { id: 'clothes', name: 'Warm Clothes', cost: 11, type: 'player' },
@@ -370,7 +372,7 @@ io.on('connection', (socket) => {
         if (!p.dead || p.voted) return;
         p.voted = true; room.votes++;
         
-        // FIXED VOTE RESTART LOGIC
+        // FIXED VOTE RESTART LOGIC (50%)
         let total = Object.keys(room.players).length;
         if (room.votes >= Math.ceil(total * 0.5)) { 
             io.to(room.id).emit('msg', 'Vote passed! Restarting...');
@@ -401,14 +403,13 @@ function checkAllDead(room) {
 function resetRoom(room) {
     room.status = 'LOBBY'; room.votes = 0;
     room.train = { distance: 0, speed: 0, maxSpeed: 35, state: 'STOPPED', fuel: 1003, maxFuel: 1003, buttonCooldown: 0, departureTimer: 0, speedMultiplier: 1, speedUpgraded: false, fuelUpgrades: 0, nextTownDist: Math.random() * (497 - 274) + 274, inTown: false, townWarningSent: false };
-    room.enemies = []; room.ores = []; room.projectiles =[]; room.bombs =[]; room.horses = []; room.barrels = []; room.avalancheRocks =[]; room.shopNPC = null; room.townX = null;
+    room.enemies = []; room.ores = []; room.projectiles =[]; room.bombs =[]; room.horses =[]; room.barrels = []; room.avalancheRocks =[]; room.shopNPC = null; room.townX = null;
     for (let id in room.players) {
         let p = room.players[id];
         p.hp = 120; p.dead = false; p.money = 0; p.bullets = 32; p.mag = 5; p.bombs = 0; p.hasClothes = false; p.hasKnife = false; p.regen = 0;
         p.inventory = { gold: 0, silver: 0, coal: 0, beerBottles: 0, beerBarrels: 0 };
         p.drunk = { sips: 0, timer: 0, damageTimer: 0 }; p.drinkCooldown = 0; p.coldMeter = 167; p.onTrain = true; p.onHorse = false; p.x = 200; p.y = 0; p.voted = false; p.spectatingId = null;
     }
-    // Tell clients to go back to lobby screen
     io.to(room.id).emit('lobbyUpdate', room);
 }
 // Master Game Loop (30 FPS)
@@ -454,11 +455,10 @@ setInterval(() => {
                 room.train.speed = 0;
                 room.train.state = 'STOPPED';
                 room.train.buttonCooldown = 3;
-                room.train.townWarningSent = false;
                 
-                if (room.train.distance >= room.train.nextTownDist) {
+                // NEW: 37% CHANCE FOR A TOWN TO SPAWN WHEN STOPPED
+                if (Math.random() < 0.37) {
                     room.train.inTown = true;
-                    room.train.nextTownDist = room.train.distance + Math.random() * (497 - 274) + 274;
                     generateShop(room);
                     room.townX = 0; 
                     room.shopNPC = { x: 0, y: 150 }; 
@@ -469,6 +469,7 @@ setInterval(() => {
                     room.townX = null;
                     spawnOres(room);
                     spawnEnemies(room, false);
+                    io.to(room.id).emit('msg', 'Stopped in the wilderness. Mine some ores!');
                 }
             }
         }
@@ -486,12 +487,6 @@ setInterval(() => {
             room.avalancheRocks.forEach(r => r.x -= dx);
             if (room.shopNPC) room.shopNPC.x -= dx;
             if (room.townX !== null) room.townX -= dx;
-
-            let distToTown = room.train.nextTownDist - room.train.distance;
-            if (distToTown <= 0.15 && distToTown > 0 && !room.train.townWarningSent) {
-                room.train.townWarningSent = true;
-                io.to(room.id).emit('msg', 'HEADS UP: Town approaching in 150 meters! Prepare to stop!');
-            }
         }
 
         if (room.train.buttonCooldown > 0) room.train.buttonCooldown -= dt;
