@@ -7,63 +7,71 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Main Menu & Lobby System -->
+    <!-- Beautiful Main Menu & Lobby System -->
     <div id="menu-container">
         <div id="screen-main" class="menu-panel">
-            <h1>TRANSCONTINENTAL</h1>
-            <input type="text" id="playerName" value="Conductor" maxlength="12" placeholder="Your Name"><br>
-            <button onclick="window.ui.showScreen('screen-create')">CREATE LOBBY</button>
-            <button onclick="window.ui.showJoin()">JOIN LOBBY</button>
-            <button onclick="window.ui.showScreen('screen-settings')">SETTINGS</button>
+            <h1 class="game-title">TRANSCONTINENTAL<br><span class="subtitle">1870s SURVIVAL</span></h1>
+            <input type="text" id="playerName" value="Conductor" maxlength="12" placeholder="Enter Your Name"><br>
+            <button class="menu-btn" onclick="window.ui.showScreen('screen-create')">CREATE TRAIN</button>
+            <button class="menu-btn" onclick="window.ui.showJoin()">JOIN TRAIN</button>
+            <button class="menu-btn" onclick="window.ui.showScreen('screen-settings')">SETTINGS</button>
         </div>
 
         <div id="screen-settings" class="menu-panel hidden">
             <h2>SETTINGS</h2>
-            <label class="setting-item">
-                <input type="checkbox" id="mobile-toggle"> Force Mobile Joysticks
-            </label><br><br>
-            <label class="setting-item">
-                <input type="checkbox" id="autolock-toggle"> Enable Auto-Lock (Heat-Sync)
-            </label><br><br>
-            <button onclick="window.ui.saveSettings()">SAVE & BACK</button>
+            <div class="setting-group">
+                <label class="setting-item">
+                    <input type="checkbox" id="mobile-toggle"> Force Mobile Joysticks
+                </label><br><br>
+                <label class="setting-item">
+                    <input type="checkbox" id="autolock-toggle"> Enable Auto-Lock (Heat-Sync)
+                </label>
+            </div>
+            <br>
+            <button class="menu-btn" onclick="window.ui.saveSettings()">SAVE & BACK</button>
         </div>
 
         <div id="screen-create" class="menu-panel hidden">
             <h2>CREATE LOBBY</h2>
-            <input type="text" id="lobbyName" value="My Train" placeholder="Lobby Name"><br>
+            <input type="text" id="lobbyName" value="Express Train" placeholder="Lobby Name"><br>
             <input type="number" id="maxPlayers" min="1" max="6" value="6" placeholder="Max Players"><br>
-            <input type="text" id="lobbyPassword" placeholder="Password (Optional)"><br>
-            <button onclick="window.ui.createLobby()">CREATE</button>
-            <button onclick="window.ui.showScreen('screen-main')">BACK</button>
+            <input type="text" id="lobbyPassword" placeholder="Password (Leave blank for public)"><br>
+            <button class="menu-btn" onclick="window.ui.createLobby()">LAUNCH TRAIN</button>
+            <button class="menu-btn" onclick="window.ui.showScreen('screen-main')">BACK</button>
         </div>
 
         <div id="screen-join" class="menu-panel hidden">
-            <h2>JOIN LOBBY</h2>
+            <h2>AVAILABLE TRAINS</h2>
             <div id="lobby-list"></div>
-            <button onclick="window.ui.showScreen('screen-main')" style="margin-top: 10px;">BACK</button>
+            <button class="menu-btn" onclick="window.ui.showScreen('screen-main')" style="margin-top: 15px;">BACK</button>
         </div>
 
         <div id="screen-lobby" class="menu-panel hidden">
             <h2 id="lobby-title">LOBBY</h2>
             <ul id="player-list"></ul>
-            <button onclick="window.ui.startGame()">START GAME</button>
+            <button class="menu-btn" onclick="window.ui.startGame()">DEPART NOW</button>
         </div>
     </div>
 
     <!-- In-Game UI -->
     <div id="game-ui" class="hidden">
         <div id="stats">
-            HP: <span id="hp">120</span> | Ammo: <span id="mag">5</span>/<span id="ammo">32</span> | $: <span id="money">0</span><br>
-            Dist: <span id="dist">0</span>/3181 km | Biome: <span id="biome">Forest</span><br>
-            Fuel: <span id="fuel">1003</span> | Speed: <span id="speed">0</span> km/h | Cold: <span id="cold">167</span><br>
-            <span style="color: gold;">G: <span id="inv-gold">0</span></span> | 
-            <span style="color: silver;">S: <span id="inv-silver">0</span></span> | 
-            <span style="color: #aaa;">C: <span id="inv-coal">0</span></span><br>
-            <span style="color: #f39c12;">Bottles: <span id="inv-bottles">0</span></span> | 
-            <span style="color: #d35400;">Barrels: <span id="inv-barrels">0</span></span>
+            <div class="stat-row">HP: <span id="hp" class="text-green">120</span> | Ammo: <span id="mag">5</span>/<span id="ammo">32</span> | $: <span id="money" class="text-gold">0</span></div>
+            <div class="stat-row">Dist: <span id="dist">0</span>/3181 km | Biome: <span id="biome">Forest</span></div>
+            <div class="stat-row">Fuel: <span id="fuel" class="text-orange">1003</span> | Speed: <span id="speed">0</span> km/h | Cold: <span id="cold" class="text-blue">167</span></div>
+            <div class="stat-row">
+                <span style="color: gold;">G: <span id="inv-gold">0</span></span> | 
+                <span style="color: silver;">S: <span id="inv-silver">0</span></span> | 
+                <span style="color: #aaa;">C: <span id="inv-coal">0</span></span>
+            </div>
+            <div class="stat-row">
+                <span style="color: #f39c12;">Bottles: <span id="inv-bottles">0</span></span> | 
+                <span style="color: #d35400;">Barrels: <span id="inv-barrels">0</span></span>
+            </div>
         </div>
         <div id="controls">
-            [WASD] Move | [Mouse] Aim | [Click] Shoot/Mine<br>[E] Interact/Dump/Drink | [R] Reload | [B] Place Barrel<br>
+            [WASD] Move | [Mouse] Aim | [Click] <span id="pc-action-text">Shoot</span><br>
+            [E] Interact/Dump/Drink | [R] Reload | [B] Place Barrel<br>
             [F] Throw Bomb | [Space] Knife
         </div>
         <div id="messages"></div>
@@ -74,26 +82,26 @@
         TRAIN DEPARTING IN <span id="dep-timer">8</span>s!
     </div>
 
-    <!-- Mobile Dual Joysticks -->
+    <!-- Mobile Dual Joysticks & Side Buttons -->
     <div id="mobile-controls" class="hidden">
-        <!-- Left Joystick: Movement -->
+        <!-- Left Joystick: Movement (Raised slightly) -->
         <div id="move-joystick-container" class="joystick-base">
             <div id="move-joystick-knob" class="joystick-knob"></div>
         </div>
         
-        <!-- Right Joystick: Aiming -->
+        <!-- Right Joystick: Aiming (Raised slightly) -->
         <div id="aim-joystick-container" class="joystick-base">
             <div id="aim-joystick-knob" class="joystick-knob"></div>
         </div>
 
-        <!-- Action Buttons -->
+        <!-- Action Buttons (Moved to the right side, above the aim joystick) -->
         <div id="mobile-actions">
-            <button id="btn-shoot">FIRE</button>
-            <button id="btn-interact">E</button>
-            <button id="btn-reload">R</button>
-            <button id="btn-bomb">F</button>
-            <button id="btn-barrel">B</button>
-            <button id="btn-knife">KNIFE</button>
+            <button id="btn-shoot" class="action-btn primary-btn">FIRE</button>
+            <button id="btn-interact" class="action-btn">E</button>
+            <button id="btn-reload" class="action-btn">R</button>
+            <button id="btn-bomb" class="action-btn">F</button>
+            <button id="btn-barrel" class="action-btn">B</button>
+            <button id="btn-knife" class="action-btn">KNIFE</button>
         </div>
     </div>
 
@@ -101,22 +109,22 @@
     <div id="shop" class="hidden overlay-box">
         <h2>Town Shop</h2>
         <div id="shop-items"></div>
-        <button onclick="window.ui.closeShop()">Close</button>
+        <button class="menu-btn" onclick="window.ui.closeShop()">Close</button>
     </div>
 
     <div id="death" class="hidden overlay-box">
-        <h1>YOU DIED</h1>
-        <button onclick="window.ui.spectateNext()">Spectate Next</button>
+        <h1 class="text-red">YOU DIED</h1>
+        <button class="menu-btn" onclick="window.ui.spectateNext()">Spectate Next</button>
     </div>
 
     <div id="all-dead" class="hidden overlay-box">
-        <h1>GAME OVER</h1>
-        <button onclick="window.ui.voteRestart()">Vote Restart (50%)</button>
+        <h1 class="text-red">GAME OVER</h1>
+        <button class="menu-btn" onclick="window.ui.voteRestart()">Vote Restart (50%)</button>
     </div>
 
     <div id="victory" class="hidden overlay-box">
-        <h1>wowww you win Tyler wowwww!</h1>
-        <button onclick="window.ui.voteRestart()">Vote Restart</button>
+        <h1 class="text-gold">wowww you win Tyler wowwww!</h1>
+        <button class="menu-btn" onclick="window.ui.voteRestart()">Vote Restart</button>
     </div>
 
     <canvas id="gameCanvas" class="hidden"></canvas>
