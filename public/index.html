@@ -36,6 +36,11 @@
             <input type="text" id="lobbyName" value="Express Train" placeholder="Lobby Name"><br>
             <input type="number" id="maxPlayers" min="1" max="6" value="6" placeholder="Max Players"><br>
             <input type="text" id="lobbyPassword" placeholder="Password (Leave blank for public)"><br>
+            <div class="setting-group" style="margin: 15px 0; text-align: left;">
+                <label class="setting-item" style="color: #ff4444; font-weight: bold;">
+                    <input type="checkbox" id="traitor-toggle" checked> Enable Traitor Role
+                </label>
+            </div>
             <button class="menu-btn" onclick="window.ui.createLobby()">LAUNCH TRAIN</button>
             <button class="menu-btn" onclick="window.ui.showScreen('screen-main')">BACK</button>
         </div>
@@ -53,6 +58,12 @@
         </div>
     </div>
 
+    <!-- Role Reveal Overlay (Among Us Style) -->
+    <div id="role-reveal" class="hidden">
+        <h1 id="role-title">ROLE</h1>
+        <p id="role-desc">Description</p>
+    </div>
+
     <!-- In-Game UI -->
     <div id="game-ui" class="hidden">
         <div id="stats">
@@ -62,17 +73,24 @@
             <div class="stat-row">
                 <span style="color: gold;">G: <span id="inv-gold">0</span></span> | 
                 <span style="color: silver;">S: <span id="inv-silver">0</span></span> | 
-                <span style="color: #aaa;">C: <span id="inv-coal">0</span></span>
+                <span style="color: #aaa;">C: <span id="inv-coal">0</span></span> |
+                <span style="color: #d2b48c;">Skins: <span id="inv-skins">0</span></span> |
+                <span style="color: #8b5a2b;">Planks: <span id="inv-planks">0</span></span>
             </div>
             <div class="stat-row">
                 <span style="color: #f39c12;">Bottles: <span id="inv-bottles">0</span></span> | 
                 <span style="color: #d35400;">Barrels: <span id="inv-barrels">0</span></span>
             </div>
         </div>
-        <div id="controls">
-            [WASD] Move | [Mouse] Aim | [Click] <span id="pc-action-text">Shoot</span><br>
-            [E] Interact/Dump/Drink | [R] Reload | [B] Place Barrel<br>
-            [F] Throw Bomb | [Space] Knife/Break Crate
+        
+        <!-- Bridge Out HUD -->
+        <div id="bridge-ui" class="hidden">
+            ⚠️ BRIDGE OUT ⚠️<br>
+            Planks: <span id="bridge-planks">0/10</span>
+        </div>
+
+        <div id="controls">[WASD] Move | [Mouse] Aim | [Click] <span id="pc-action-text">Shoot</span><br>
+            [E] Interact/Dump/Drink | [R] Reload | [B] Place Barrel<br>[F] Throw Bomb | [Space] Knife/Break Crate
         </div>
         <div id="messages"></div>
     </div>
@@ -84,17 +102,17 @@
 
     <!-- Mobile Dual Joysticks & Side Buttons -->
     <div id="mobile-controls" class="hidden">
-        <!-- Left Joystick: Movement (Raised slightly) -->
+        <!-- Left Joystick: Movement -->
         <div id="move-joystick-container" class="joystick-base">
             <div id="move-joystick-knob" class="joystick-knob"></div>
         </div>
         
-        <!-- Right Joystick: Aiming (Raised slightly) -->
+        <!-- Right Joystick: Aiming -->
         <div id="aim-joystick-container" class="joystick-base">
             <div id="aim-joystick-knob" class="joystick-knob"></div>
         </div>
 
-        <!-- Action Buttons (Moved to the right side, above the aim joystick) -->
+        <!-- Action Buttons -->
         <div id="mobile-actions">
             <button id="btn-shoot" class="action-btn primary-btn">FIRE</button>
             <button id="btn-interact" class="action-btn">E</button>
@@ -110,6 +128,20 @@
         <h2>Town Shop</h2>
         <div id="shop-items"></div>
         <button class="menu-btn" onclick="window.ui.closeShop()">Close</button>
+    </div>
+
+    <div id="revive-menu" class="hidden overlay-box">
+        <h2 class="text-gold">REVIVE PLAYER</h2>
+        <p>Select a fallen comrade to revive:</p>
+        <div id="dead-players-list"></div>
+        <button class="menu-btn" onclick="window.ui.closeRevive()">Cancel</button>
+    </div>
+
+    <div id="gambling-menu" class="hidden overlay-box">
+        <h2 id="gamble-title" class="text-gold">PLACE YOUR BETS</h2>
+        <p id="gamble-timer" class="text-red">Time left: 10s</p>
+        <div id="gamble-options"></div>
+        <button class="menu-btn" onclick="window.ui.closeGambling()">Close</button>
     </div>
 
     <div id="death" class="hidden overlay-box">
