@@ -53,12 +53,16 @@ canvas { display: block; transition: filter 0.5s, transform 0.5s; }
 .game-title { font-size: 32px; color: #ffd700; text-shadow: 2px 2px 4px #000; margin-bottom: 5px; }
 .subtitle { font-size: 18px; color: #aaa; letter-spacing: 2px; }
 
-input {
+input[type="text"], input[type="number"] {
     display: block; width: 90%; padding: 12px; margin: 15px auto;
     background: #111; color: #fff; border: 2px solid #5d2e0a; 
     border-radius: 6px; font-family: inherit; font-size: 16px; text-align: center;
 }
 input:focus { outline: none; border-color: #ffd700; }
+
+input[type="range"] {
+    width: 60%; margin: 10px; vertical-align: middle;
+}
 
 .menu-btn {
     display: block; width: 100%; padding: 15px; margin: 10px 0; 
@@ -87,7 +91,7 @@ input:focus { outline: none; border-color: #ffd700; }
     border-radius: 8px; font-size: 13px; text-align: right; z-index: 10; line-height: 1.5;
 }
 #messages {
-    position: absolute; top: 140px; left: 15px; color: #ff4444; font-weight: bold; font-size: 22px;
+    position: absolute; top: 160px; left: 15px; color: #ff4444; font-weight: bold; font-size: 22px;
     background: rgba(0,0,0,0.7); padding: 10px 15px; border-radius: 8px; z-index: 10; text-shadow: 1px 1px 0 #000;
 }
 #messages:empty { display: none; }
@@ -99,7 +103,6 @@ input:focus { outline: none; border-color: #ffd700; }
     border-radius: 12px; z-index: 90; box-shadow: 0 0 30px rgba(255,0,0,0.5);
 }
 
-/* Bridge Out HUD */
 #bridge-ui {
     position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
     background: rgba(200, 50, 50, 0.9); padding: 10px 20px; border: 2px solid #ffaaaa;
@@ -138,19 +141,19 @@ input:focus { outline: none; border-color: #ffd700; }
     top: 35px; left: 35px; pointer-events: none; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
 }
 
-/* Repositioned Mobile Action Buttons (Side) */
+/* Repositioned Mobile Action Buttons */
 #mobile-actions {
     position: absolute; bottom: 240px; right: 30px;
-    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; z-index: 50;
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; z-index: 50;
 }
 .action-btn {
-    width: 65px; height: 65px; border-radius: 50%; font-size: 14px; font-weight: bold;
+    width: 65px; height: 65px; border-radius: 50%; font-size: 12px; font-weight: bold;
     background: rgba(0,0,0,0.6); color: white; border: 2px solid #aaa; 
     padding: 0; margin: 0; box-shadow: 0 4px 6px rgba(0,0,0,0.5);
 }
 .primary-btn {
     background: rgba(200, 50, 50, 0.7); border-color: #ffaaaa; width: 75px; height: 75px;
-    grid-column: span 2; justify-self: center; font-size: 16px;
+    grid-column: span 3; justify-self: center; font-size: 16px;
 }
 
 .overlay-box {
@@ -160,7 +163,7 @@ input:focus { outline: none; border-color: #ffd700; }
 }
 
 /* --- SCROLLABLE MENUS --- */
-#shop, #revive-menu, #gambling-menu {
+#shop, #revive-menu, #gambling-menu, #storage-menu {
     max-height: 85vh; display: flex; flex-direction: column;
 }
 #shop-items, #dead-players-list, #gamble-options {
