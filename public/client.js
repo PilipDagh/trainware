@@ -43,6 +43,7 @@ window.ui = {
             password: document.getElementById('lobbyPassword').value
         };
         socket.emit('createLobby', data);
+        socket.emit('updateLobbySettings', { traitorEnabled: document.getElementById('traitor-toggle').checked });
     },
     joinLobby: (roomId, isPrivate) => {
         const password = isPrivate ? prompt("Enter Lobby Password:") : "";
@@ -57,6 +58,8 @@ window.ui = {
     },
     startGame: () => socket.emit('startGame'),
     closeShop: () => document.getElementById('shop').classList.add('hidden'),
+    closeRevive: () => document.getElementById('revive-menu').classList.add('hidden'),
+    closeGambling: () => document.getElementById('gambling-menu').classList.add('hidden'),
     spectateNext: () => socket.emit('spectateNext'),
     voteRestart: () => {
         socket.emit('voteRestart');
@@ -74,11 +77,9 @@ socket.on('lobbyList', (lobbies) => {
         div.className = 'lobby-item';
         div.innerHTML = `<span>${l.name} (${l.players}/${l.maxPlayers}) ${l.isPrivate ? '🔒' : ''}</span>`;
         const btn = document.createElement('button');
-        btn.className = 'menu-btn';
-        btn.innerText = 'JOIN';
+        btn.className = 'menu-btn'; btn.innerText = 'JOIN';
         btn.onclick = () => window.ui.joinLobby(l.id, l.isPrivate);
-        div.appendChild(btn);
-        list.appendChild(div);
+        div.appendChild(btn); list.appendChild(div);
     });
 });
 
@@ -106,12 +107,31 @@ socket.on('gameStarted', () => {
     }
 });
 
+// Role Reveal Animation
+socket.on('roleReveal', (data) => {
+    const revealEl = document.getElementById('role-reveal');
+    const titleEl = document.getElementById('role-title');
+    const descEl = document.getElementById('role-desc');
+    
+    titleEl.innerText = data.isTraitor ? 'TRAITOR' : data.role.toUpperCase();
+    titleEl.style.color = data.isTraitor ? '#ff4444' : '#44ff44';
+    descEl.innerText = data.desc;
+    
+    revealEl.classList.remove('hidden');
+    revealEl.style.animation = 'none';
+    void revealEl.offsetWidth; // Trigger reflow
+    revealEl.style.animation = 'fadeInOut 5s forwards';
+    
+    setTimeout(() => { revealEl.classList.add('hidden'); }, 5000);
+});
+
 socket.on('state', (state) => { gameState = state; updateUI(); });
 socket.on('msg', (msg) => {
     const el = document.getElementById('messages');
     el.innerText = msg;
     setTimeout(() => el.innerText = '', 4000);
 });
+
 socket.on('openShop', () => {
     document.getElementById('shop').classList.remove('hidden');
     const cont = document.getElementById('shop-items');
@@ -120,6 +140,32 @@ socket.on('openShop', () => {
         return `<button class="menu-btn" onclick="socket.emit('buy', '${i.id}')">${i.name} - $${i.cost}${stock}</button>`;
     }).join('');
 });
+
+socket.on('openReviveMenu', (deadPlayers) => {
+    document.getElementById('revive-menu').classList.remove('hidden');
+    const cont = document.getElementById('dead-players-list');
+    if (deadPlayers.length === 0) {
+        cont.innerHTML = '<p>No dead players to revive.</p>';
+    } else {
+        cont.innerHTML = deadPlayers.map(p => 
+            `<button class="menu-btn" onclick="socket.emit('revivePlayer', '${p.id}'); window.ui.closeRevive();">Revive ${p.name}</button>`
+        ).join('');
+    }
+});
+
+socket.on('gamblingStart', (data) => {
+    document.getElementById('gambling-menu').classList.remove('hidden');
+    document.getElementById('gamble-title').innerText = data.type === 'horse' ? 'HORSE RACING' : 'ROULETTE';
+    const cont = document.getElementById('gamble-options');
+    cont.innerHTML = '';
+    
+    let options = data.type === 'horse' ?[{l:'Horse 1 (4x)', v:1}, {l:'Horse 2 (4x)', v:2}, {l:'Horse 3 (4x)', v:3}, {l:'Horse 4 (4x)', v:4}] :[{l:'Red (2x)', v:'red'}, {l:'Black (2x)', v:'black'}, {l:'Green (14x)', v:'green'}];
+        
+    options.forEach(opt => {
+        cont.innerHTML += `<button class="menu-btn" onclick="socket.emit('placeBet', {amount: 10, choice: '${opt.v}'})">Bet $10 on ${opt.l}</button>`;
+    });
+});
+
 socket.on('allDead', () => document.getElementById('all-dead').classList.remove('hidden'));
 socket.on('victory', () => document.getElementById('victory').classList.remove('hidden'));
 
@@ -130,13 +176,8 @@ window.addEventListener('keydown', (e) => {
     if (key === 'e') socket.emit('interact');
     if (key === 'r') socket.emit('reload');
     if (key === 'b') socket.emit('placeBarrel');
-    if (key === 'f') {
-        if (gameState && gameState.players[socket.id]) {
-            let p = gameState.players[socket.id];
-            socket.emit('throwBomb', { x: p.x + Math.cos(p.aimAngle)*150, y: p.y + Math.sin(p.aimAngle)*150 });
-        }
-    }
-    if (e.key === ' ') socket.emit('stab'); // Knife / Break Crate
+    if (key === 'f') socket.emit('throwBomb', { x: mouseX, y: mouseY }); // Will be adjusted by server aimAngle
+    if (e.key === ' ') socket.emit('stab'); 
 });
 window.addEventListener('keyup', (e) => { if (keys.hasOwnProperty(e.key.toLowerCase())) keys[e.key.toLowerCase()] = false; });
 
@@ -159,8 +200,7 @@ window.addEventListener('mousedown', (e) => {
             for (let ore of gameState.ores) {
                 if (Math.hypot(worldX - ore.x, worldY - ore.y) < 100) {
                     socket.emit('mine', ore.id);
-                    clickedOre = true;
-                    break;
+                    clickedOre = true; break;
                 }
             }
         }
@@ -236,14 +276,8 @@ bindMobileBtn('btn-shoot', () => {
 bindMobileBtn('btn-interact', () => socket.emit('interact'));
 bindMobileBtn('btn-reload', () => socket.emit('reload'));
 bindMobileBtn('btn-barrel', () => socket.emit('placeBarrel'));
-bindMobileBtn('btn-knife', () => socket.emit('stab')); // Also used for breaking crates
-bindMobileBtn('btn-bomb', () => {
-    if (gameState && gameState.players[socket.id]) {
-        let p = gameState.players[socket.id];
-        socket.emit('throwBomb', { x: p.x + Math.cos(p.aimAngle)*150, y: p.y + Math.sin(p.aimAngle)*150 });
-    }
-});
-
+bindMobileBtn('btn-knife', () => socket.emit('stab')); 
+bindMobileBtn('btn-bomb', () => socket.emit('throwBomb', { x: 0, y: 0 })); // Handled by server aimAngle
 // --- UI UPDATER ---
 function updateUI() {
     if (!gameState || !gameState.players[socket.id]) return;
@@ -263,10 +297,12 @@ function updateUI() {
     document.getElementById('inv-gold').innerText = p.inventory.gold;
     document.getElementById('inv-silver').innerText = p.inventory.silver;
     document.getElementById('inv-coal').innerText = p.inventory.coal;
+    document.getElementById('inv-skins').innerText = p.inventory.skins;
+    document.getElementById('inv-planks').innerText = p.inventory.planks;
     document.getElementById('inv-bottles').innerText = p.inventory.beerBottles;
     document.getElementById('inv-barrels').innerText = p.inventory.beerBarrels;
 
-    // Dynamic Mine/Shoot & Break/Knife Button Text
+    // Dynamic Action Button Text
     let canMine = false;
     let canBreak = false;
     if (gameState.train.state === 'STOPPED') {
@@ -280,10 +316,14 @@ function updateUI() {
         }
     }
     
-    document.getElementById('btn-shoot').innerText = canMine ? 'MINE' : 'FIRE';
+    let btnShoot = document.getElementById('btn-shoot');
+    if (btnShoot) btnShoot.innerText = canMine ? 'MINE' : 'FIRE';
     document.getElementById('pc-action-text').innerText = canMine ? 'Mine' : 'Shoot';
-    document.getElementById('btn-knife').innerText = canBreak ? 'BREAK' : 'KNIFE';
+    
+    let btnKnife = document.getElementById('btn-knife');
+    if (btnKnife) btnKnife.innerText = canBreak ? 'BREAK' : 'KNIFE';
 
+    // Departure Warning
     let depWarning = document.getElementById('departure-warning');
     if (gameState.train.state === 'DEPARTING') {
         depWarning.classList.remove('hidden');
@@ -292,12 +332,29 @@ function updateUI() {
         depWarning.classList.add('hidden');
     }
 
+    // Bridge Out HUD
+    let bridgeUI = document.getElementById('bridge-ui');
+    if (!gameState.train.bridgeFixed) {
+        bridgeUI.classList.remove('hidden');
+        document.getElementById('bridge-planks').innerText = `${gameState.train.planksDeposited}/${gameState.train.planksNeeded}`;
+    } else {
+        bridgeUI.classList.add('hidden');
+    }
+
+    // Gambling Timer
+    let gambleTimer = document.getElementById('gamble-timer');
+    if (gameState.gambling.active) {
+        gambleTimer.innerText = `Time left: ${Math.ceil(gameState.gambling.timer)}s`;
+    }
+
     // Drunk CSS Classes
     canvas.className = '';
     if (p.drunk.sips >= 3 && p.drunk.sips < 6) canvas.classList.add('drunk-1');
     else if (p.drunk.sips >= 6 && p.drunk.sips < 9) canvas.classList.add('drunk-2');
     else if (p.drunk.sips >= 9) canvas.classList.add('drunk-3');
 }
+
+// --- RENDER ENGINE ---
 function drawHumanoid(x, y, color, angle, hasKnife, onHorse, isEnemy, enemyType, name) {
     ctx.save();
     ctx.translate(x, y);
@@ -380,6 +437,17 @@ function drawTrain() {
             ctx.fillStyle = '#222'; ctx.fillRect(-5, -5, car.w + 10, car.h + 10);
             ctx.fillStyle = '#87ceeb';
             for(let i=20; i<car.w-20; i+=30) { ctx.fillRect(i, 10, 15, 15); ctx.fillRect(i, car.h - 25, 15, 15); }
+            
+            // Draw Gambling Tables
+            if (car.id === 'pass1') {
+                ctx.fillStyle = '#006400'; ctx.fillRect(70, 20, 40, 40); // Roulette Table
+                ctx.fillStyle = '#fff'; ctx.font = '10px monospace'; ctx.fillText('ROULETTE', 68, 45);
+            }
+            if (car.id === 'pass2') {
+                ctx.fillStyle = '#8b4513'; ctx.fillRect(70, 20, 40, 40); // Horse Racing Table
+                ctx.fillStyle = '#fff'; ctx.font = '10px monospace'; ctx.fillText('RACING', 72, 45);
+            }
+
         } else if (car.id === 'caboose') {
             ctx.fillStyle = '#8b0000'; ctx.fillRect(0, 0, car.w, car.h);
             ctx.fillStyle = '#600000'; ctx.fillRect(30, 15, 40, 40);
@@ -429,7 +497,7 @@ function draw() {
         }
     }
 
-    // Scenery (Trees, Cacti, Snow) - Optimized
+    // Scenery (Trees, Cacti, Snow)
     let sceneryOffset = pixelDist % 600;
     for(let i = -2000; i < 2000; i+= 300) {
         let xPos = i - sceneryOffset + camX;
@@ -449,7 +517,7 @@ function draw() {
         });
     }
 
-    // Ground Lines - Optimized
+    // Ground Lines
     ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
     let groundOffset = pixelDist % 200;
     for(let i = -2000; i < 2000; i+= 200) {
@@ -460,32 +528,49 @@ function draw() {
 
     // ACTUAL TOWNS
     if (gameState.townX !== null) {
-        // Dirt Road
-        ctx.fillStyle = '#8b5a2b';
-        ctx.fillRect(gameState.townX - 400, -300, 800, 600);
+        ctx.fillStyle = '#8b5a2b'; ctx.fillRect(gameState.townX - 400, -300, 800, 600);
         
-        // Saloon
         ctx.fillStyle = '#5d2e0a'; ctx.fillRect(gameState.townX - 150, -250, 120, 100);
-        ctx.fillStyle = '#3e1f04'; ctx.fillRect(gameState.townX - 160, -260, 140, 20); // Roof
+        ctx.fillStyle = '#3e1f04'; ctx.fillRect(gameState.townX - 160, -260, 140, 20); 
         ctx.fillStyle = '#fff'; ctx.font = 'bold 16px monospace'; ctx.fillText('SALOON', gameState.townX - 90, -220);
         
-        // General Store
         ctx.fillStyle = '#6b4423'; ctx.fillRect(gameState.townX + 50, -250, 120, 100);
-        ctx.fillStyle = '#3e1f04'; ctx.fillRect(gameState.townX + 40, -260, 140, 20); // Roof
+        ctx.fillStyle = '#3e1f04'; ctx.fillRect(gameState.townX + 40, -260, 140, 20); 
         ctx.fillStyle = '#fff'; ctx.font = 'bold 16px monospace'; ctx.fillText('STORE', gameState.townX + 110, -220);
 
-        // Bank
         ctx.fillStyle = '#8b4513'; ctx.fillRect(gameState.townX - 150, 150, 120, 100);
-        ctx.fillStyle = '#3e1f04'; ctx.fillRect(gameState.townX - 160, 140, 140, 20); // Roof
+        ctx.fillStyle = '#3e1f04'; ctx.fillRect(gameState.townX - 160, 140, 140, 20); 
         ctx.fillStyle = '#fff'; ctx.font = 'bold 16px monospace'; ctx.fillText('BANK', gameState.townX - 90, 180);
     }
 
-    // Tracks
+    // Tracks & Bridge Out Visual
     let tieOffset = pixelDist % 40;
     ctx.fillStyle = '#4a3c31'; 
-    for(let i = -2000; i < 2000; i+= 40) ctx.fillRect(i - tieOffset + camX, -35, 10, 70);
-    ctx.fillStyle = '#777'; 
-    ctx.fillRect(-2000 + camX, -25, 4000, 6); ctx.fillRect(-2000 + camX, 19, 4000, 6);
+    for(let i = -2000; i < 2000; i+= 40) {
+        // Don't draw ties if bridge is out and we are in the gap
+        if (!gameState.train.bridgeFixed && (i - tieOffset + camX) > 280 && (i - tieOffset + camX) < 450) continue;
+        ctx.fillRect(i - tieOffset + camX, -35, 10, 70);
+    }
+    
+    if (!gameState.train.bridgeFixed) {
+        // Draw broken tracks
+        ctx.fillStyle = '#777'; 
+        ctx.fillRect(-2000 + camX, -25, 2280, 6); ctx.fillRect(-2000 + camX, 19, 2280, 6); // Left side
+        ctx.fillRect(450 + camX, -25, 1550, 6); ctx.fillRect(450 + camX, 19, 1550, 6); // Right side
+        
+        // Draw River/Chasm
+        ctx.fillStyle = '#1e90ff';
+        ctx.fillRect(280 + camX, -1000 + camY, 170, 2000);
+        
+        // Draw Deposit Zone
+        ctx.fillStyle = 'rgba(255, 255, 0, 0.3)';
+        ctx.fillRect(280 + camX, -50, 40, 100);
+        ctx.fillStyle = '#fff'; ctx.font = '12px monospace'; ctx.fillText('DEPOSIT PLANKS', 280 + camX, -60);
+    } else {
+        // Normal Tracks
+        ctx.fillStyle = '#777'; 
+        ctx.fillRect(-2000 + camX, -25, 4000, 6); ctx.fillRect(-2000 + camX, 19, 4000, 6);
+    }
 
     // Avalanche Rocks
     if (gameState.avalancheRocks && gameState.avalancheRocks.length > 0) {
@@ -509,15 +594,28 @@ function draw() {
     // Crates
     if (gameState.crates) {
         gameState.crates.forEach(c => {
-            ctx.fillStyle = '#8b5a2b'; // Brown wood
-            ctx.fillRect(c.x - 15, c.y - 15, 30, 30);
-            ctx.strokeStyle = '#3e1f04'; ctx.lineWidth = 2;
-            ctx.strokeRect(c.x - 15, c.y - 15, 30, 30);
-            // Draw 'X' on crate
-            ctx.beginPath();
-            ctx.moveTo(c.x - 15, c.y - 15); ctx.lineTo(c.x + 15, c.y + 15);
-            ctx.moveTo(c.x + 15, c.y - 15); ctx.lineTo(c.x - 15, c.y + 15);
-            ctx.stroke();
+            ctx.fillStyle = '#8b5a2b'; ctx.fillRect(c.x - 15, c.y - 15, 30, 30);
+            ctx.strokeStyle = '#3e1f04'; ctx.lineWidth = 2; ctx.strokeRect(c.x - 15, c.y - 15, 30, 30);
+            ctx.beginPath(); ctx.moveTo(c.x - 15, c.y - 15); ctx.lineTo(c.x + 15, c.y + 15);
+            ctx.moveTo(c.x + 15, c.y - 15); ctx.lineTo(c.x - 15, c.y + 15); ctx.stroke();
+        });
+    }
+
+    // Animals
+    if (gameState.animals) {
+        gameState.animals.forEach(a => {
+            ctx.fillStyle = '#8b5a2b'; // Brown fur
+            ctx.beginPath(); ctx.arc(a.x, a.y, 12, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(a.x + 8, a.y - 4, 2, 0, Math.PI * 2); ctx.fill(); // Eye
+        });
+    }
+
+    // Planks
+    if (gameState.planks) {
+        gameState.planks.forEach(p => {
+            ctx.fillStyle = '#d2b48c'; // Light wood
+            ctx.fillRect(p.x - 15, p.y - 5, 30, 10);
+            ctx.strokeStyle = '#8b5a2b'; ctx.strokeRect(p.x - 15, p.y - 5, 30, 10);
         });
     }
 
@@ -557,8 +655,8 @@ function draw() {
     }
 
     // Projectiles
-    ctx.fillStyle = '#ffcc00';
     gameState.projectiles.forEach(p => {
+        ctx.fillStyle = p.isTraitor ? '#ff0000' : '#ffcc00'; // Traitor bullets are red
         ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI * 2); ctx.fill();
     });
 
