@@ -217,12 +217,16 @@ io.on('connection', (socket) => {
 
     socket.on('updateSettings', (settings) => {
         let room = rooms[socket.roomId];
-        if (room && room.players[socket.id]) room.players[socket.id].settings = settings;
+        if (room && room.players[socket.id]) {
+            room.players[socket.id].settings = settings;
+        }
     });
 
     socket.on('updateLobbySettings', (settings) => {
         let room = rooms[socket.roomId];
-        if (room && room.status === 'LOBBY') room.settings.traitorEnabled = settings.traitorEnabled;
+        if (room && room.status === 'LOBBY') {
+            room.settings.traitorEnabled = settings.traitorEnabled;
+        }
     });
 
     socket.on('startGame', () => {
@@ -262,7 +266,9 @@ io.on('connection', (socket) => {
 
     socket.on('aim', (angle) => {
         let room = rooms[socket.roomId];
-        if (room && room.players[socket.id]) room.players[socket.id].aimAngle = angle;
+        if (room && room.players[socket.id]) {
+            room.players[socket.id].aimAngle = angle;
+        }
     });
     socket.on('shoot', () => {
         let room = rooms[socket.roomId];
@@ -692,8 +698,8 @@ setInterval(() => {
             }
         } else if (room.train.state === 'ACCELERATING') {
             room.train.speed += (room.train.maxSpeed / 8) * dt;
-            room.avalancheRocks =
-                if (room.train.speed >= room.train.maxSpeed) room.train.state = 'MOVING';
+            room.avalancheRocks =[]; 
+            if (room.train.speed >= room.train.maxSpeed) room.train.state = 'MOVING';
         } else if (room.train.state === 'SLOWING') {
             room.train.speed -= (room.train.maxSpeed / 4) * dt;
             if (room.train.speed <= 0) {
@@ -733,7 +739,6 @@ setInterval(() => {
                 }
             }
         }
-
         if (room.train.state === 'MOVING' || room.train.state === 'ACCELERATING' || room.train.state === 'SLOWING') {
             let fuelMult = 1;
             // Apply Engineer buff if an engineer is alive and on train
