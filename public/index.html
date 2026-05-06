@@ -71,15 +71,16 @@
             <div class="stat-row">Dist: <span id="dist">0</span>/3181 km | Biome: <span id="biome">Forest</span></div>
             <div class="stat-row">Fuel: <span id="fuel" class="text-orange">1003</span> | Speed: <span id="speed">0</span> km/h | Cold: <span id="cold" class="text-blue">167</span></div>
             <div class="stat-row">
-                <span style="color: gold;">G: <span id="inv-gold">0</span></span> | 
-                <span style="color: silver;">S: <span id="inv-silver">0</span></span> | 
-                <span style="color: #aaa;">C: <span id="inv-coal">0</span></span> |
+                <span style="color: gold;">G: <span id="inv-gold">0</span>/11</span> | 
+                <span style="color: silver;">S: <span id="inv-silver">0</span>/15</span> | 
+                <span style="color: #aaa;">C: <span id="inv-coal">0</span>/27</span> |
                 <span style="color: #d2b48c;">Skins: <span id="inv-skins">0</span></span> |
                 <span style="color: #8b5a2b;">Planks: <span id="inv-planks">0</span></span>
             </div>
             <div class="stat-row">
                 <span style="color: #f39c12;">Bottles: <span id="inv-bottles">0</span></span> | 
-                <span style="color: #d35400;">Barrels: <span id="inv-barrels">0</span></span>
+                <span style="color: #d35400;">Barrels: <span id="inv-barrels">0</span></span> |
+                <span style="color: #fff;">Watches: <span id="inv-watches">0</span>/2</span>
             </div>
         </div>
         
@@ -90,7 +91,8 @@
         </div>
 
         <div id="controls">[WASD] Move | [Mouse] Aim | [Click] <span id="pc-action-text">Shoot</span><br>
-            [E] Interact/Dump/Drink | [R] Reload | [B] Place Barrel<br>[F] Throw Bomb | [Space] Knife/Break Crate
+            [E] Interact/Dump/Drink | [R] Reload | [B] Place Barrel<br>[F] Throw Bomb | [Space] Knife/Break Crate<br>
+            [L] Flashlight | [Hold T] Release Steam
         </div>
         <div id="messages"></div>
     </div>
@@ -102,17 +104,13 @@
 
     <!-- Mobile Dual Joysticks & Side Buttons -->
     <div id="mobile-controls" class="hidden">
-        <!-- Left Joystick: Movement -->
         <div id="move-joystick-container" class="joystick-base">
             <div id="move-joystick-knob" class="joystick-knob"></div>
         </div>
-        
-        <!-- Right Joystick: Aiming -->
         <div id="aim-joystick-container" class="joystick-base">
             <div id="aim-joystick-knob" class="joystick-knob"></div>
         </div>
 
-        <!-- Action Buttons -->
         <div id="mobile-actions">
             <button id="btn-shoot" class="action-btn primary-btn">FIRE</button>
             <button id="btn-interact" class="action-btn">E</button>
@@ -120,6 +118,8 @@
             <button id="btn-bomb" class="action-btn">F</button>
             <button id="btn-barrel" class="action-btn">B</button>
             <button id="btn-knife" class="action-btn">KNIFE</button>
+            <button id="btn-flashlight" class="action-btn">LIGHT</button>
+            <button id="btn-steam" class="action-btn">STEAM</button>
         </div>
     </div>
 
@@ -128,6 +128,18 @@
         <h2>Town Shop</h2>
         <div id="shop-items"></div>
         <button class="menu-btn" onclick="window.ui.closeShop()">Close</button>
+    </div>
+
+    <div id="storage-menu" class="hidden overlay-box">
+        <h2 class="text-gold">STORAGE CAR</h2>
+        <p>Capacity: <span id="storage-cap">0/99</span></p>
+        <div style="text-align: left; margin: 10px 0;">
+            <label>Gold: <input type="range" id="slider-gold" min="0" max="0" value="0" oninput="window.ui.updateStorageUI()"><span id="val-gold">0</span></label><br>
+            <label>Silver: <input type="range" id="slider-silver" min="0" max="0" value="0" oninput="window.ui.updateStorageUI()"><span id="val-silver">0</span></label><br>
+            <label>Coal: <input type="range" id="slider-coal" min="0" max="0" value="0" oninput="window.ui.updateStorageUI()"><span id="val-coal">0</span></label>
+        </div>
+        <button class="menu-btn" onclick="window.ui.depositStorage()">Deposit</button>
+        <button class="menu-btn" onclick="window.ui.closeStorage()">Close</button>
     </div>
 
     <div id="revive-menu" class="hidden overlay-box">
