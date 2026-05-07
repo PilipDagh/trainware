@@ -1,8 +1,11 @@
 {
-  "name": "iron-horse",
+  "name": "transcontinental-survival",
   "version": "1.0.0",
+  "description": "1870s Multiplayer Survival Game",
   "main": "server.js",
-  "scripts": { "start": "node server.js" },
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
     "express": "^4.18.2",
     "socket.io": "^4.7.2"
