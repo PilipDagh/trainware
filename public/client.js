@@ -459,7 +459,7 @@ function drawHumanoid(x, y, color, angle, hasKnife, onHorse, isEnemy, enemyType,
             ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI*2); ctx.fill();
         } else if (enemyType === 'marshal') {
             ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = '#ffd700'; ctx.fillRect(-2, -2, 4, 4); // Gold Star
+            ctx.fillStyle = '#ffd700'; ctx.fillRect(-2, -2, 4, 4); // Gold Star for Marshals
         }
     }
     ctx.restore();
@@ -512,7 +512,6 @@ function drawTrain() {
             ctx.fillStyle = '#6b4423'; ctx.fillRect(0, 0, car.w, car.h);
             ctx.fillStyle = '#222'; ctx.fillRect(-5, -5, car.w + 10, car.h + 10);
             
-            // Stove
             ctx.fillStyle = '#111'; ctx.fillRect(50, 20, 40, 40);
             ctx.fillStyle = '#ff4444'; ctx.beginPath(); ctx.arc(70, 40, 10, 0, Math.PI*2); ctx.fill();
             ctx.fillStyle = '#fff'; ctx.font = '10px monospace'; ctx.fillText('STOVE', 55, 15);
@@ -521,14 +520,13 @@ function drawTrain() {
             ctx.fillStyle = '#6b4423'; ctx.fillRect(0, 0, car.w, car.h);
             ctx.fillStyle = '#222'; ctx.fillRect(-5, -5, car.w + 10, car.h + 10);
             
-            // 3 Tables
-            ctx.fillStyle = '#006400'; ctx.fillRect(10, 20, 30, 40); // Roulette
+            ctx.fillStyle = '#006400'; ctx.fillRect(10, 20, 30, 40); 
             ctx.fillStyle = '#fff'; ctx.font = '8px monospace'; ctx.fillText('ROUL', 12, 45);
             
-            ctx.fillStyle = '#8b4513'; ctx.fillRect(55, 20, 30, 40); // Racing
+            ctx.fillStyle = '#8b4513'; ctx.fillRect(55, 20, 30, 40); 
             ctx.fillStyle = '#fff'; ctx.fillText('RACE', 57, 45);
             
-            ctx.fillStyle = '#000080'; ctx.fillRect(100, 20, 30, 40); // Poker
+            ctx.fillStyle = '#000080'; ctx.fillRect(100, 20, 30, 40); 
             ctx.fillStyle = '#fff'; ctx.fillText('POKER', 102, 45);
 
         } else if (car.id === 'caboose') {
@@ -692,8 +690,8 @@ function draw() {
 
     if (gameState.mailPoles) {
         gameState.mailPoles.forEach(m => {
-            ctx.fillStyle = '#555'; ctx.fillRect(m.x - 5, m.y - 40, 10, 80); // Pole
-            ctx.fillStyle = '#d2b48c'; ctx.fillRect(m.x - 15, m.y - 20, 20, 30); // Bag
+            ctx.fillStyle = '#555'; ctx.fillRect(m.x - 5, m.y - 40, 10, 80); 
+            ctx.fillStyle = '#d2b48c'; ctx.fillRect(m.x - 15, m.y - 20, 20, 30); 
             ctx.fillStyle = '#fff'; ctx.font = '10px monospace'; ctx.fillText('$', m.x - 5, m.y);
         });
     }
