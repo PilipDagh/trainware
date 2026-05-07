@@ -2,11 +2,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Transcontinental Survival</title>
+    <link rel="stylesheet" href="style.css">
     <title>TRANSCONTINENTAL: 1870s SURVIVAL</title>
     <style>
-        * { box-sizing: border-box; }
         body { margin: 0; overflow: hidden; background: #1a1a1a; font-family: 'Times New Roman', serif; color: #e6d5a8; user-select: none; }
         canvas { display: block; }
         
@@ -14,91 +15,123 @@
         .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; background: rgba(20, 15, 10, 0.95); z-index: 10; }
         .active { display: flex; }
         
-        h1 { font-size: 3.5rem; text-shadow: 3px 3px 6px #000; color: #d4af37; text-align: center; margin-bottom: 10px; }
-        h2 { font-size: 2.5rem; color: #c0a040; margin-bottom: 20px; text-shadow: 2px 2px 4px #000; }
+        h1 { font-size: 3rem; text-shadow: 2px 2px 4px #000; color: #d4af37; text-align: center; }
+        h2 { font-size: 2rem; color: #c0a040; }
         
-        .panel { background: #3e2723; border: 4px solid #5d4037; padding: 30px; border-radius: 10px; box-shadow: inset 0 0 30px #000, 0 0 20px rgba(0,0,0,0.8); width: 450px; display: flex; flex-direction: column; gap: 15px; }
+        .panel { background: #3e2723; border: 4px solid #5d4037; padding: 20px; border-radius: 10px; box-shadow: inset 0 0 20px #000; width: 400px; display: flex; flex-direction: column; gap: 15px; }
         
-        input[type="text"], input[type="password"], input[type="number"], select { width: 100%; padding: 12px; background: #1a1a1a; border: 2px solid #d4af37; color: #e6d5a8; font-family: inherit; font-size: 1.2rem; outline: none; }
+        input[type="text"], input[type="password"], input[type="number"] { width: 90%; padding: 10px; background: #1a1a1a; border: 1px solid #d4af37; color: #e6d5a8; font-family: inherit; font-size: 1.2rem; }
         
-        button { background: linear-gradient(#8d6e63, #5d4037); border: 2px solid #27140c; color: #e6d5a8; padding: 12px 20px; font-size: 1.2rem; font-family: inherit; cursor: pointer; text-transform: uppercase; font-weight: bold; transition: 0.2s; box-shadow: 2px 2px 5px #000; }
-        button:hover { background: linear-gradient(#a1887f, #795548); color: #fff; transform: translateY(-2px); }
-        button:active { transform: translateY(1px); }
+        button { background: linear-gradient(#8d6e63, #5d4037); border: 2px solid #3e2723; color: #e6d5a8; padding: 10px 20px; font-size: 1.2rem; font-family: inherit; cursor: pointer; text-transform: uppercase; font-weight: bold; transition: 0.2s; }
+        button:hover { background: linear-gradient(#a1887f, #795548); color: #fff; }
         
         .toggle-row { display: flex; justify-content: space-between; align-items: center; font-size: 1.2rem; }
-        input[type="checkbox"] { width: 25px; height: 25px; accent-color: #d4af37; }
         
         /* In-Game UI */
         #game-ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; display: none; }
-        #hud { position: absolute; top: 10px; left: 10px; background: rgba(26, 26, 26, 0.85); padding: 15px; border: 2px solid #d4af37; pointer-events: auto; font-size: 1.1rem; line-height: 1.5; box-shadow: 2px 2px 10px #000; border-radius: 5px; }
-        #notifications { position: absolute; top: 10px; right: 10px; width: 300px; display: flex; flex-direction: column; gap: 5px; align-items: flex-end; }
-        .notif { background: rgba(0,0,0,0.8); color: #fff; padding: 10px; border-left: 4px solid #d4af37; font-size: 1.1rem; animation: fadeOut 4s forwards; }
-        @keyframes fadeOut { 0% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
+        #hud { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); padding: 10px; border: 2px solid #d4af37; pointer-events: auto; }
         
         /* Departure Warning */
-        #departure-warning { position: absolute; top: 20%; width: 100%; text-align: center; color: #ff3333; font-size: 4rem; font-weight: bold; text-shadow: 4px 4px 0 #000; display: none; animation: flash 0.5s infinite; }
+        #departure-warning { position: absolute; top: 20%; width: 100%; text-align: center; color: #ff3333; font-size: 4rem; font-weight: bold; text-shadow: 3px 3px 0 #000; display: none; animation: flash 0.5s infinite; }
         @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
         /* Among Us Intro */
-        #intro-screen { background: #050505; z-index: 100; }
-        #role-name { font-size: 6rem; font-weight: bold; text-transform: uppercase; margin: 20px 0; letter-spacing: 5px; }
+        #intro-screen { background: #000; z-index: 100; }
+        #role-name { font-size: 5rem; font-weight: bold; text-transform: uppercase; margin: 20px 0; }
         
         /* Mobile Joysticks */
-        .joystick-base { position: absolute; bottom: 40px; width: 140px; height: 140px; background: rgba(255,255,255,0.05); border: 3px solid rgba(212, 175, 55, 0.4); border-radius: 50%; pointer-events: auto; display: none; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); }
-        .joystick-stick { position: absolute; top: 35px; left: 35px; width: 70px; height: 70px; background: rgba(212, 175, 55, 0.7); border-radius: 50%; box-shadow: 0 0 10px #000; }
-        #joy-left { left: 40px; }
-        #joy-right { right: 40px; }
+        .joystick-base { position: absolute; bottom: 30px; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; pointer-events: auto; display: none; }
+        .joystick-stick { position: absolute; top: 30px; left: 30px; width: 60px; height: 60px; background: rgba(212, 175, 55, 0.5); border-radius: 50%; }
+        #joy-left { left: 30px; }
+        #joy-right { right: 30px; }
         
-        /* Action Buttons (Mobile) */
-        .action-btn { position: absolute; bottom: 200px; width: 70px; height: 70px; border-radius: 50%; background: rgba(141, 110, 99, 0.8); border: 2px solid #d4af37; color: white; font-weight: bold; font-size: 1rem; pointer-events: auto; display: none; display: flex; justify-content: center; align-items: center; text-align: center; }
-        #btn-interact { right: 40px; }
-        #btn-eat { right: 130px; }
-        #btn-drink { right: 220px; }
-        #btn-steam { left: 40px; }
-
-        /* Modals */
-        .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2c1e16; border: 4px solid #d4af37; padding: 25px; z-index: 20; display: none; pointer-events: auto; text-align: center; width: 400px; box-shadow: 0 0 30px #000; border-radius: 10px; }
-        .modal h2 { margin-top: 0; }
-        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .shop-item { background: #1a1a1a; border: 1px solid #5d4037; padding: 10px; cursor: pointer; transition: 0.2s; }
-        .shop-item:hover { background: #3e2723; border-color: #d4af37; }
+        /* Modals (Gambling, Storage, Revive) */
+        .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2c1e16; border: 4px solid #d4af37; padding: 20px; z-index: 20; display: none; pointer-events: auto; text-align: center; }
+        .slider-container { margin: 10px 0; }
+        .slider-container input[type="range"] { width: 100%; }
         
         /* Lobby List */
-        #lobby-list-container { max-height: 250px; overflow-y: auto; border: 2px solid #5d4037; padding: 10px; margin-bottom: 10px; background: #1a1a1a; }
-        .lobby-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #3e2723; }
-        .lobby-item:last-child { border-bottom: none; }
-        .lobby-item button { padding: 5px 10px; font-size: 1rem; }
+        #lobby-list-container { max-height: 200px; overflow-y: auto; border: 1px solid #d4af37; padding: 5px; margin-bottom: 10px; }
+        .lobby-item { display: flex; justify-content: space-between; padding: 5px; border-bottom: 1px solid #555; }
     </style>
 </head>
 <body>
+    <!-- Beautiful Main Menu & Lobby System -->
+    <div id="menu-container">
+        <div id="screen-main" class="menu-panel">
+            <h1 class="game-title">TRANSCONTINENTAL<br><span class="subtitle">1870s SURVIVAL</span></h1>
+            <input type="text" id="playerName" value="Conductor" maxlength="12" placeholder="Enter Your Name"><br>
+            <button class="menu-btn" onclick="window.ui.showScreen('screen-create')">CREATE TRAIN</button>
+            <button class="menu-btn" onclick="window.ui.showJoin()">JOIN TRAIN</button>
+            <button class="menu-btn" onclick="window.ui.showScreen('screen-settings')">SETTINGS</button>
+        </div>
 
+        <div id="screen-settings" class="menu-panel hidden">
+            <h2>SETTINGS</h2>
+            <div class="setting-group">
+                <label class="setting-item">
+                    <input type="checkbox" id="mobile-toggle"> Force Mobile Joysticks
+                </label><br><br>
+                <label class="setting-item">
+                    <input type="checkbox" id="autolock-toggle"> Enable Auto-Lock (Heat-Sync)
+                </label>
+            </div>
+            <br>
+            <button class="menu-btn" onclick="window.ui.saveSettings()">SAVE & BACK</button>
     <!-- Main Menu -->
     <div id="screen-main" class="screen active">
-        <h1>TRANSCONTINENTAL<br><span style="font-size: 2rem; color: #a1887f;">1870s SURVIVAL</span></h1>
+        <h1>TRANSCONTINENTAL<br><span style="font-size: 1.5rem;">1870s SURVIVAL</span></h1>
         <div class="panel">
-            <input type="text" id="player-name" placeholder="Enter Your Name" value="Conductor" maxlength="12">
+            <input type="text" id="player-name" placeholder="Enter Your Name" value="Conductor">
             <button onclick="showScreen('screen-create')">CREATE TRAIN</button>
             <button onclick="openJoinMenu()">JOIN TRAIN</button>
             <button onclick="showScreen('screen-settings')">SETTINGS</button>
-        </div>
+</div>
     </div>
 
+        <div id="screen-create" class="menu-panel hidden">
+            <h2>CREATE LOBBY</h2>
+            <input type="text" id="lobbyName" value="Express Train" placeholder="Lobby Name"><br>
+            <input type="number" id="maxPlayers" min="1" max="6" value="6" placeholder="Max Players"><br>
+            <input type="text" id="lobbyPassword" placeholder="Password (Leave blank for public)"><br>
+            <div class="setting-group" style="margin: 15px 0; text-align: left;">
+                <label class="setting-item" style="color: #ff4444; font-weight: bold;">
+                    <input type="checkbox" id="traitor-toggle" checked> Enable Traitor Role
+                </label>
     <!-- Create Lobby -->
     <div id="screen-create" class="screen">
         <h2>CREATE TRAIN</h2>
         <div class="panel">
-            <input type="text" id="lobby-name" placeholder="Lobby Name" value="Express" maxlength="16">
+            <input type="text" id="lobby-name" placeholder="Lobby Name" value="Express">
             <input type="number" id="lobby-max" placeholder="Max Players (1-6)" min="1" max="6" value="6">
             <input type="password" id="lobby-pass" placeholder="Password (Optional)">
             <div class="toggle-row">
                 <span>Enable Traitor Role</span>
                 <input type="checkbox" id="lobby-traitor" checked>
-            </div>
+</div>
+            <button class="menu-btn" onclick="window.ui.createLobby()">LAUNCH TRAIN</button>
+            <button class="menu-btn" onclick="window.ui.showScreen('screen-main')">BACK</button>
+        </div>
+
+        <div id="screen-join" class="menu-panel hidden">
+            <h2>AVAILABLE TRAINS</h2>
+            <div id="lobby-list"></div>
+            <button class="menu-btn" onclick="window.ui.showScreen('screen-main')" style="margin-top: 15px;">BACK</button>
+        </div>
+
+        <div id="screen-lobby" class="menu-panel hidden">
+            <h2 id="lobby-title">LOBBY</h2>
+            <ul id="player-list"></ul>
+            <button class="menu-btn" onclick="window.ui.startGame()">DEPART NOW</button>
             <button onclick="createLobby()">LAUNCH TRAIN</button>
             <button onclick="showScreen('screen-main')">BACK</button>
-        </div>
-    </div>
+</div>
+</div>
 
+    <!-- Role Reveal Overlay (Among Us Style) -->
+    <div id="role-reveal" class="hidden">
+        <h1 id="role-title">ROLE</h1>
+        <p id="role-desc">Description</p>
     <!-- Join Lobby -->
     <div id="screen-join" class="screen">
         <h2>JOIN TRAIN</h2>
@@ -107,8 +140,20 @@
             <input type="password" id="join-pass" placeholder="Password (if required)">
             <button onclick="showScreen('screen-main')">BACK</button>
         </div>
-    </div>
+</div>
 
+    <!-- In-Game UI -->
+    <div id="game-ui" class="hidden">
+        <div id="stats">
+            <div class="stat-row">HP: <span id="hp" class="text-green">120</span> | Ammo: <span id="mag">5</span>/<span id="ammo">32</span> | $: <span id="money" class="text-gold">0</span></div>
+            <div class="stat-row">Dist: <span id="dist">0</span>/3181 km | Biome: <span id="biome">Forest</span></div>
+            <div class="stat-row">Fuel: <span id="fuel" class="text-orange">1003</span> | Speed: <span id="speed">0</span> km/h | Cold: <span id="cold" class="text-blue">167</span></div>
+            <div class="stat-row">
+                <span style="color: gold;">G: <span id="inv-gold">0</span>/11</span> | 
+                <span style="color: silver;">S: <span id="inv-silver">0</span>/15</span> | 
+                <span style="color: #aaa;">C: <span id="inv-coal">0</span>/27</span> |
+                <span style="color: #d2b48c;">Skins: <span id="inv-skins">0</span></span> |
+                <span style="color: #8b5a2b;">Planks: <span id="inv-planks">0</span></span>
     <!-- Settings -->
     <div id="screen-settings" class="screen">
         <h2>SETTINGS</h2>
@@ -116,63 +161,139 @@
             <div class="toggle-row">
                 <span>Force Mobile Joysticks</span>
                 <input type="checkbox" id="set-mobile">
-            </div>
+</div>
+            <div class="stat-row">
+                <span style="color: #f39c12;">Bottles: <span id="inv-bottles">0</span></span> | 
+                <span style="color: #d35400;">Barrels: <span id="inv-barrels">0</span></span> |
+                <span style="color: #fff;">Watches: <span id="inv-watches">0</span>/2</span> |
+                <span style="color: #ff6347;">Meat: <span id="inv-rawmeat">0</span>/<span id="inv-cookedmeat">0</span></span>
             <div class="toggle-row">
                 <span>Enable Auto-Lock (Heat-Sync)</span>
                 <input type="checkbox" id="set-autolock">
-            </div>
+</div>
             <button onclick="saveSettings()">SAVE & BACK</button>
+</div>
+        
+        <!-- Bridge Out HUD -->
+        <div id="bridge-ui" class="hidden">
+            ⚠️ BRIDGE OUT ⚠️<br>
+            Planks: <span id="bridge-planks">0/10</span>
         </div>
+
+        <div id="controls">[WASD] Move | [Mouse] Aim | [Click] <span id="pc-action-text">Shoot</span><br>[E] Interact/Dump/Drink | [R] Reload | [B] Place Barrel<br>[F] Throw Bomb | [Space] Knife/Break Crate<br>
+            [L] Flashlight | [Hold T] Release Steam | [Y] Eat Meat
+        </div>
+        <div id="messages"></div>
     </div>
 
+    <!-- Departure Warning -->
+    <div id="departure-warning" class="hidden">
+        TRAIN DEPARTING IN <span id="dep-timer">8</span>s!
+</div>
+
+    <!-- Mobile Dual Joysticks & Side Buttons -->
+    <div id="mobile-controls" class="hidden">
+        <div id="move-joystick-container" class="joystick-base">
+            <div id="move-joystick-knob" class="joystick-knob"></div>
+        </div>
+        <div id="aim-joystick-container" class="joystick-base">
+            <div id="aim-joystick-knob" class="joystick-knob"></div>
+        </div>
+
+        <div id="mobile-actions">
+            <button id="btn-shoot" class="action-btn primary-btn">FIRE</button>
+            <button id="btn-interact" class="action-btn">E</button>
+            <button id="btn-reload" class="action-btn">R</button>
+            <button id="btn-bomb" class="action-btn">F</button>
+            <button id="btn-barrel" class="action-btn">B</button>
+            <button id="btn-knife" class="action-btn">KNIFE</button>
+            <button id="btn-flashlight" class="action-btn">LIGHT</button>
+            <button id="btn-steam" class="action-btn">STEAM</button>
+            <button id="btn-eat" class="action-btn">EAT</button>
     <!-- In-Lobby Waiting Room -->
     <div id="screen-waiting" class="screen">
         <h2 id="waiting-title">LOBBY</h2>
         <div class="panel">
-            <div id="waiting-players" style="min-height: 150px; border: 2px solid #5d4037; padding: 15px; margin-bottom: 10px; background: #1a1a1a; font-size: 1.3rem; font-weight: bold; line-height: 1.8;"></div>
-            <button id="btn-depart" onclick="startGame()" style="display:none; background: linear-gradient(#4caf50, #2e7d32);">DEPART NOW</button>
-        </div>
-    </div>
+            <div id="waiting-players" style="min-height: 100px; border: 1px solid #d4af37; padding: 10px; margin-bottom: 10px;"></div>
+            <button id="btn-depart" onclick="startGame()" style="display:none;">DEPART NOW</button>
+</div>
+</div>
 
+    <!-- Overlays -->
+    <div id="shop" class="hidden overlay-box">
+        <h2>Town Shop</h2>
+        <div id="shop-items"></div>
+        <button class="menu-btn" onclick="window.ui.closeShop()">Close</button>
     <!-- Intro Screen -->
     <div id="intro-screen" class="screen">
-        <h2 style="color: #fff; text-shadow: none;">YOU ARE THE</h2>
+        <h2 style="color: white;">YOU ARE THE</h2>
         <div id="role-name">ROLE</div>
-        <p id="role-buff" style="font-size: 1.8rem; color: #ccc; text-align: center; max-width: 800px;"></p>
-    </div>
+        <p id="role-buff" style="font-size: 1.5rem; color: #aaa;"></p>
+</div>
 
+    <div id="storage-menu" class="hidden overlay-box">
+        <h2 class="text-gold">STORAGE CAR</h2>
+        <p>Capacity: <span id="storage-cap">0/99</span></p>
+        <div style="text-align: left; margin: 10px 0;">
+            <label>Gold: <input type="range" id="slider-gold" min="0" max="0" value="0" oninput="window.ui.updateStorageUI()"><span id="val-gold">0</span></label><br>
+            <label>Silver: <input type="range" id="slider-silver" min="0" max="0" value="0" oninput="window.ui.updateStorageUI()"><span id="val-silver">0</span></label><br>
+            <label>Coal: <input type="range" id="slider-coal" min="0" max="0" value="0" oninput="window.ui.updateStorageUI()"><span id="val-coal">0</span></label>
+        </div>
+        <button class="menu-btn" onclick="window.ui.depositStorage()">Deposit</button>
+        <button class="menu-btn" onclick="window.ui.closeStorage()">Close</button>
     <!-- Victory Screen -->
     <div id="screen-victory" class="screen">
         <h1>HALL OF FAME</h1>
-        <h2 style="color: #fff; font-size: 1.5rem; margin-bottom: 30px;">wowww you win Tyler wowwww, made by Julian, Kylin, and Tyler!</h2>
-        <div class="panel" id="victory-stats" style="text-align: left; font-size: 1.4rem; line-height: 2;"></div>
-        <button onclick="location.reload()" style="margin-top: 20px;">MAIN MENU</button>
+        <div class="panel" id="victory-stats" style="text-align: center; font-size: 1.5rem;"></div>
+        <button onclick="location.reload()">MAIN MENU</button>
+</div>
+
+    <div id="revive-menu" class="hidden overlay-box">
+        <h2 class="text-gold">REVIVE PLAYER</h2>
+        <p>Select a fallen comrade to revive:</p>
+        <div id="dead-players-list"></div>
+        <button class="menu-btn" onclick="window.ui.closeRevive()">Cancel</button>
     </div>
 
+    <div id="gambling-menu" class="hidden overlay-box">
+        <h2 id="gamble-title" class="text-gold">PLACE YOUR BETS</h2>
+        <p id="gamble-timer" class="text-red">Time left: 10s</p>
+        <div id="gamble-options"></div>
+        <button class="menu-btn" onclick="window.ui.closeGambling()">Close</button>
+    </div>
+
+    <div id="death" class="hidden overlay-box">
+        <h1 class="text-red">YOU DIED</h1>
+        <button class="menu-btn" onclick="window.ui.spectateNext()">Spectate Next</button>
+    </div>
+
+    <div id="all-dead" class="hidden overlay-box">
+        <h1 class="text-red">GAME OVER</h1>
+        <button class="menu-btn" onclick="window.ui.voteRestart()">Vote Restart (50%)</button>
+    </div>
+
+    <div id="victory" class="hidden overlay-box">
+        <h1 class="text-gold">wowww you win Tyler wowwww!</h1>
+        <h2>HALL OF FAME</h2>
+        <p>The Lead-Slinger (Most Kills): <span id="hof-kills" class="text-red"></span></p>
+        <p>The Drunkard (Most Beer): <span id="hof-drunk" class="text-orange"></span></p>
+        <p>The Workhorse (Most Coal): <span id="hof-coal" class="text-blue"></span></p>
+        <p>The Snake (Traitor): <span id="hof-snake" class="text-green"></span></p>
+        <button class="menu-btn" onclick="window.ui.voteRestart()">Vote Restart</button>
     <!-- GAME UI -->
     <div id="game-ui">
         <div id="hud">
-            <div id="hp-bar" style="color: #ff4d4d; font-weight: bold;">HP: 100</div>
+            <div id="hp-bar">HP: 100</div>
             <div id="ammo-bar">Ammo: 20</div>
-            <div id="money-bar" style="color: gold;">$: 0</div>
-            <div id="meat-bar">Meat: 0 | Cooked: 0</div>
-            <div id="inv-bar">Bandages: 0 | Beer: 0</div>
-            <hr style="border-color: #5d4037; margin: 8px 0;">
-            <div id="train-stats">Speed: 0km/h<br>Coal: 500/1003<br>Pressure: 0/100<br>Dist: 0/3181km</div>
-            <div id="controls-hint" style="font-size: 0.9rem; color: #aaa; margin-top: 10px;">[WASD] Move | [Click] Shoot<br>[E] Interact | [Y] Eat | [B] Drink<br>[T] Steam Valve</div>
+            <div id="money-bar">$: 0</div>
+            <div id="meat-bar">Meat: 0 | Cooked: 0 (Press Y to eat)</div>
+            <div id="train-stats">Speed: 0 | Coal: 500 | Dist: 0/3181km</div>
         </div>
-        
-        <div id="notifications"></div>
-        
         <div id="departure-warning">TRAIN DEPARTING IN <span id="dep-time">8</span>s!</div>
         
         <!-- Mobile Controls -->
         <div id="joy-left" class="joystick-base"><div class="joystick-stick" id="stick-left"></div></div>
         <div id="joy-right" class="joystick-base"><div class="joystick-stick" id="stick-right"></div></div>
-        <div id="btn-interact" class="action-btn">INT (E)</div>
-        <div id="btn-eat" class="action-btn">EAT (Y)</div>
-        <div id="btn-drink" class="action-btn">BEER (B)</div>
-        <div id="btn-steam" class="action-btn">STEAM (T)</div>
         
         <!-- Gambling Modal -->
         <div id="modal-gamble" class="modal">
@@ -181,43 +302,21 @@
                 <option value="Roulette">Roulette</option>
                 <option value="Horse">Horse Racing</option>
             </select>
-            <div id="gamble-options" style="margin: 15px 0;">
+            <div id="gamble-options" style="margin: 10px 0;">
                 <select id="gamble-choice">
                     <option value="Red">Red (2x)</option>
                     <option value="Black">Black (2x)</option>
                     <option value="Green">Green (14x)</option>
                 </select>
             </div>
-            <div style="margin-bottom: 15px;">
-                <label>Bet Amount: $</label>
-                <input type="number" id="gamble-bet" value="10" min="1" style="width: 80px; display: inline-block;">
-            </div>
-            <button onclick="placeBet()">PLACE BET</button>
-            <button onclick="closeModal('modal-gamble')" style="background: #555;">LEAVE</button>
+            <input type="number" id="gamble-bet" value="10" min="1" style="width: 50px;">
+            <button onclick="placeBet()">BET</button>
+            <button onclick="document.getElementById('modal-gamble').style.display='none'">LEAVE</button>
         </div>
+</div>
 
-        <!-- Shop Modal -->
-        <div id="modal-shop" class="modal" style="width: 500px;">
-            <h2>TOWN SHOP</h2>
-            <p style="color: gold; margin-top: 0;">Ores automatically sold!</p>
-            <div class="shop-grid">
-                <div class="shop-item" onclick="buyItem('Bandages')">Bandages ($2)</div>
-                <div class="shop-item" onclick="buyItem('Bombs')">Bombs ($5)</div>
-                <div class="shop-item" onclick="buyItem('Knife')">Knife ($5)</div>
-                <div class="shop-item" onclick="buyItem('Ammo')">Ammo x10 ($4)</div>
-                <div class="shop-item" onclick="buyItem('WarmClothes')">Warm Clothes ($11)</div>
-                <div class="shop-item" onclick="buyItem('BeerBottle')">Beer Bottle ($3)</div>
-                <div class="shop-item" onclick="buyItem('BeerBarrel')">Beer Barrel ($11)</div>
-                <div class="shop-item" onclick="buyItem('Flashlight')">Flashlight ($11)</div>
-            </div>
-            <button onclick="buyItem('ReviveKit')" style="width: 100%; margin-bottom: 10px; background: linear-gradient(#4caf50, #2e7d32);">Revive Kit ($21)</button>
-            <button onclick="closeModal('modal-shop')" style="width: 100%; background: #555;">LEAVE</button>
-        </div>
-    </div>
-
+    <canvas id="gameCanvas" class="hidden"></canvas>
     <canvas id="gameCanvas"></canvas>
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="client.js"></script>
-</body>
-</html>
+<script src="/socket.io/socket.io.js"></script>
+<script src="client.js"></script>
