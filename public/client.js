@@ -13,6 +13,7 @@ let mouseX = 0, mouseY = 0;
 let moveJoystick = { active: false, x: 0, y: 0 };
 let aimJoystick = { active: false, x: 0, y: 0 };
 
+// Base train cars (Storage cars are drawn dynamically)
 const TRAIN_CARS =[
     { id: 'engine', x: 120, w: 160, y: -40, h: 80 },
     { id: 'coal', x: 10, w: 100, y: -35, h: 70 },
@@ -25,6 +26,8 @@ window.addEventListener('resize', () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 });
+
+let storageData = { currentTotal: 0, maxCap: 0 };
 
 // --- BULLETPROOF SCREEN MANAGER ---
 window.ui = {
@@ -60,6 +63,30 @@ window.ui = {
     closeShop: () => document.getElementById('shop').classList.add('hidden'),
     closeRevive: () => document.getElementById('revive-menu').classList.add('hidden'),
     closeGambling: () => document.getElementById('gambling-menu').classList.add('hidden'),
+    closeStorage: () => document.getElementById('storage-menu').classList.add('hidden'),
+    updateStorageUI: () => {
+        let g = parseInt(document.getElementById('slider-gold').value) || 0;
+        let s = parseInt(document.getElementById('slider-silver').value) || 0;
+        let c = parseInt(document.getElementById('slider-coal').value) || 0;
+        let totalAdding = g + s + c;
+        let available = storageData.maxCap - storageData.currentTotal;
+        
+        let capText = document.getElementById('storage-cap');
+        if (totalAdding > available) capText.style.color = '#ff4444';
+        else capText.style.color = '#fff';
+        
+        document.getElementById('val-gold').innerText = g;
+        document.getElementById('val-silver').innerText = s;
+        document.getElementById('val-coal').innerText = c;
+        capText.innerText = `${storageData.currentTotal + totalAdding}/${storageData.maxCap}`;
+    },
+    depositStorage: () => {
+        let g = parseInt(document.getElementById('slider-gold').value) || 0;
+        let s = parseInt(document.getElementById('slider-silver').value) || 0;
+        let c = parseInt(document.getElementById('slider-coal').value) || 0;
+        socket.emit('depositStorage', { gold: g, silver: s, coal: c });
+        window.ui.closeStorage();
+    },
     spectateNext: () => socket.emit('spectateNext'),
     voteRestart: () => {
         socket.emit('voteRestart');
@@ -141,6 +168,19 @@ socket.on('openShop', () => {
     }).join('');
 });
 
+socket.on('openStorageMenu', (data) => {
+    storageData = data;
+    document.getElementById('storage-menu').classList.remove('hidden');
+    let p = gameState.players[socket.id];
+    document.getElementById('slider-gold').max = p.inventory.gold;
+    document.getElementById('slider-silver').max = p.inventory.silver;
+    document.getElementById('slider-coal').max = p.inventory.coal;
+    document.getElementById('slider-gold').value = 0;
+    document.getElementById('slider-silver').value = 0;
+    document.getElementById('slider-coal').value = 0;
+    window.ui.updateStorageUI();
+});
+
 socket.on('openReviveMenu', (deadPlayers) => {
     document.getElementById('revive-menu').classList.remove('hidden');
     const cont = document.getElementById('dead-players-list');
@@ -176,10 +216,21 @@ window.addEventListener('keydown', (e) => {
     if (key === 'e') socket.emit('interact');
     if (key === 'r') socket.emit('reload');
     if (key === 'b') socket.emit('placeBarrel');
-    if (key === 'f') socket.emit('throwBomb', { x: mouseX, y: mouseY }); // Will be adjusted by server aimAngle
+    if (key === 'l') socket.emit('toggleFlashlight');
+    if (key === 't') socket.emit('startSteam');
+    if (key === 'f') {
+        if (gameState && gameState.players[socket.id]) {
+            let p = gameState.players[socket.id];
+            socket.emit('throwBomb', { x: p.x + Math.cos(p.aimAngle)*150, y: p.y + Math.sin(p.aimAngle)*150 });
+        }
+    }
     if (e.key === ' ') socket.emit('stab'); 
 });
-window.addEventListener('keyup', (e) => { if (keys.hasOwnProperty(e.key.toLowerCase())) keys[e.key.toLowerCase()] = false; });
+window.addEventListener('keyup', (e) => { 
+    let key = e.key.toLowerCase();
+    if (keys.hasOwnProperty(key)) keys[key] = false; 
+    if (key === 't') socket.emit('stopSteam');
+});
 
 window.addEventListener('mousemove', (e) => {
     mouseX = e.clientX; mouseY = e.clientY;
@@ -254,9 +305,12 @@ setupJoystick('aim-joystick-container', 'aim-joystick-knob', (nx, ny) => {
 });
 
 // Mobile Action Buttons
-const bindMobileBtn = (id, action) => {
+const bindMobileBtn = (id, action, isHold = false) => {
     const btn = document.getElementById(id);
-    if (btn) btn.addEventListener('touchstart', (e) => { e.preventDefault(); action(); }, { passive: false });
+    if (btn) {
+        btn.addEventListener('touchstart', (e) => { e.preventDefault(); action(true); }, { passive: false });
+        if (isHold) btn.addEventListener('touchend', (e) => { e.preventDefault(); action(false); }, { passive: false });
+    }
 };
 
 bindMobileBtn('btn-shoot', () => {
@@ -277,7 +331,17 @@ bindMobileBtn('btn-interact', () => socket.emit('interact'));
 bindMobileBtn('btn-reload', () => socket.emit('reload'));
 bindMobileBtn('btn-barrel', () => socket.emit('placeBarrel'));
 bindMobileBtn('btn-knife', () => socket.emit('stab')); 
-bindMobileBtn('btn-bomb', () => socket.emit('throwBomb', { x: 0, y: 0 })); // Handled by server aimAngle
+bindMobileBtn('btn-flashlight', () => socket.emit('toggleFlashlight')); 
+bindMobileBtn('btn-steam', (isDown) => {
+    if (isDown) socket.emit('startSteam');
+    else socket.emit('stopSteam');
+}, true);
+bindMobileBtn('btn-bomb', () => {
+    if (gameState && gameState.players[socket.id]) {
+        let p = gameState.players[socket.id];
+        socket.emit('throwBomb', { x: p.x + Math.cos(p.aimAngle)*150, y: p.y + Math.sin(p.aimAngle)*150 });
+    }
+});
 // --- UI UPDATER ---
 function updateUI() {
     if (!gameState || !gameState.players[socket.id]) return;
@@ -301,6 +365,7 @@ function updateUI() {
     document.getElementById('inv-planks').innerText = p.inventory.planks;
     document.getElementById('inv-bottles').innerText = p.inventory.beerBottles;
     document.getElementById('inv-barrels').innerText = p.inventory.beerBarrels;
+    document.getElementById('inv-watches').innerText = p.inventory.watches;
 
     // Dynamic Action Button Text
     let canMine = false;
@@ -406,9 +471,15 @@ function drawTrain() {
     ctx.save();
     ctx.translate(0, 0); // Train is always at world origin (0,0)
 
+    // Connectors
     ctx.fillStyle = '#555';
     ctx.fillRect(110, -5, 10, 10); ctx.fillRect(0, -5, 10, 10);   
     ctx.fillRect(-150, -5, 10, 10); ctx.fillRect(-300, -5, 10, 10); 
+    
+    // Connectors for dynamic storage cars
+    for (let i = 0; i < gameState.train.storageCars; i++) {
+        ctx.fillRect(-400 - (i * 100), -5, 10, 10);
+    }
 
     TRAIN_CARS.forEach(car => {
         ctx.save();
@@ -429,8 +500,15 @@ function drawTrain() {
             ctx.fillStyle = '#333'; ctx.fillRect(0, 0, car.w, car.h);
             ctx.fillStyle = '#0a0a0a';
             for(let i=10; i<car.w-10; i+=15) for(let j=10; j<car.h-10; j+=15) ctx.fillRect(i, j, 12, 12);
+            
+            // Coal Dump Button
             ctx.fillStyle = '#ffaa00'; ctx.fillRect(40, 25, 20, 20);
             ctx.fillStyle = '#fff'; ctx.font = 'bold 10px monospace'; ctx.fillText('DUMP', 38, 40);
+
+            // Steam Valve
+            ctx.fillStyle = '#888'; ctx.beginPath(); ctx.arc(50, 35, 8, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#f00'; ctx.fillRect(48, 25, 4, 10);
+            ctx.fillStyle = '#fff'; ctx.fillText('VALVE', 38, 20);
 
         } else if (car.id.startsWith('pass')) {
             ctx.fillStyle = '#6b4423'; ctx.fillRect(0, 0, car.w, car.h);
@@ -438,13 +516,12 @@ function drawTrain() {
             ctx.fillStyle = '#87ceeb';
             for(let i=20; i<car.w-20; i+=30) { ctx.fillRect(i, 10, 15, 15); ctx.fillRect(i, car.h - 25, 15, 15); }
             
-            // Draw Gambling Tables
             if (car.id === 'pass1') {
-                ctx.fillStyle = '#006400'; ctx.fillRect(70, 20, 40, 40); // Roulette Table
+                ctx.fillStyle = '#006400'; ctx.fillRect(70, 20, 40, 40); 
                 ctx.fillStyle = '#fff'; ctx.font = '10px monospace'; ctx.fillText('ROULETTE', 68, 45);
             }
             if (car.id === 'pass2') {
-                ctx.fillStyle = '#8b4513'; ctx.fillRect(70, 20, 40, 40); // Horse Racing Table
+                ctx.fillStyle = '#8b4513'; ctx.fillRect(70, 20, 40, 40); 
                 ctx.fillStyle = '#fff'; ctx.font = '10px monospace'; ctx.fillText('RACING', 72, 45);
             }
 
@@ -455,6 +532,23 @@ function drawTrain() {
         }
         ctx.restore();
     });
+
+    // Draw Dynamic Storage Cars
+    for (let i = 0; i < gameState.train.storageCars; i++) {
+        ctx.save();
+        let sx = -500 - (i * 100);
+        ctx.translate(sx, -35);
+        ctx.fillStyle = '#5c4033'; ctx.fillRect(0, 0, 90, 70); // Darker wood
+        ctx.fillStyle = '#222'; ctx.fillRect(-5, -5, 100, 80); // Roof
+        
+        // Storage Menu Button (Only on the first storage car)
+        if (i === 0) {
+            ctx.fillStyle = '#ffd700'; ctx.fillRect(35, 25, 20, 20);
+            ctx.fillStyle = '#000'; ctx.font = 'bold 10px monospace'; ctx.fillText('STORE', 32, 40);
+        }
+        ctx.restore();
+    }
+
     ctx.restore();
 }
 
@@ -500,8 +594,7 @@ function draw() {
     // Scenery (Trees, Cacti, Snow)
     let sceneryOffset = pixelDist % 600;
     for(let i = -2000; i < 2000; i+= 300) {
-        let xPos = i - sceneryOffset + camX;
-        [-300, -150, 150, 300].forEach(yOffset => {
+        let xPos = i - sceneryOffset + camX;[-300, -150, 150, 300].forEach(yOffset => {
             let finalX = xPos + (Math.abs(yOffset) % 100);
             let finalY = yOffset + camY;
 
@@ -547,27 +640,20 @@ function draw() {
     let tieOffset = pixelDist % 40;
     ctx.fillStyle = '#4a3c31'; 
     for(let i = -2000; i < 2000; i+= 40) {
-        // Don't draw ties if bridge is out and we are in the gap
         if (!gameState.train.bridgeFixed && (i - tieOffset + camX) > 280 && (i - tieOffset + camX) < 450) continue;
         ctx.fillRect(i - tieOffset + camX, -35, 10, 70);
     }
     
     if (!gameState.train.bridgeFixed) {
-        // Draw broken tracks
         ctx.fillStyle = '#777'; 
-        ctx.fillRect(-2000 + camX, -25, 2280, 6); ctx.fillRect(-2000 + camX, 19, 2280, 6); // Left side
-        ctx.fillRect(450 + camX, -25, 1550, 6); ctx.fillRect(450 + camX, 19, 1550, 6); // Right side
+        ctx.fillRect(-2000 + camX, -25, 2280, 6); ctx.fillRect(-2000 + camX, 19, 2280, 6); 
+        ctx.fillRect(450 + camX, -25, 1550, 6); ctx.fillRect(450 + camX, 19, 1550, 6); 
         
-        // Draw River/Chasm
-        ctx.fillStyle = '#1e90ff';
-        ctx.fillRect(280 + camX, -1000 + camY, 170, 2000);
+        ctx.fillStyle = '#1e90ff'; ctx.fillRect(280 + camX, -1000 + camY, 170, 2000); // River
         
-        // Draw Deposit Zone
-        ctx.fillStyle = 'rgba(255, 255, 0, 0.3)';
-        ctx.fillRect(280 + camX, -50, 40, 100);
+        ctx.fillStyle = 'rgba(255, 255, 0, 0.3)'; ctx.fillRect(280 + camX, -50, 40, 100); // Deposit Zone
         ctx.fillStyle = '#fff'; ctx.font = '12px monospace'; ctx.fillText('DEPOSIT PLANKS', 280 + camX, -60);
     } else {
-        // Normal Tracks
         ctx.fillStyle = '#777'; 
         ctx.fillRect(-2000 + camX, -25, 4000, 6); ctx.fillRect(-2000 + camX, 19, 4000, 6);
     }
@@ -604,18 +690,31 @@ function draw() {
     // Animals
     if (gameState.animals) {
         gameState.animals.forEach(a => {
-            ctx.fillStyle = '#8b5a2b'; // Brown fur
-            ctx.beginPath(); ctx.arc(a.x, a.y, 12, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(a.x + 8, a.y - 4, 2, 0, Math.PI * 2); ctx.fill(); // Eye
+            ctx.fillStyle = '#8b5a2b'; ctx.beginPath(); ctx.arc(a.x, a.y, 12, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(a.x + 8, a.y - 4, 2, 0, Math.PI * 2); ctx.fill(); 
         });
     }
 
     // Planks
     if (gameState.planks) {
         gameState.planks.forEach(p => {
-            ctx.fillStyle = '#d2b48c'; // Light wood
-            ctx.fillRect(p.x - 15, p.y - 5, 30, 10);
+            ctx.fillStyle = '#d2b48c'; ctx.fillRect(p.x - 15, p.y - 5, 30, 10);
             ctx.strokeStyle = '#8b5a2b'; ctx.strokeRect(p.x - 15, p.y - 5, 30, 10);
+        });
+    }
+
+    // Hawks
+    if (gameState.hawks) {
+        gameState.hawks.forEach(h => {
+            ctx.fillStyle = '#5c4033'; ctx.beginPath(); ctx.moveTo(h.x, h.y); ctx.lineTo(h.x - 15, h.y - 10); ctx.lineTo(h.x - 15, h.y + 10); ctx.fill();
+        });
+    }
+
+    // Snakes
+    if (gameState.snakes) {
+        gameState.snakes.forEach(s => {
+            ctx.strokeStyle = '#2e8b57'; ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(s.x - 10, s.y + 5); ctx.lineTo(s.x - 20, s.y - 5); ctx.stroke();
         });
     }
 
@@ -656,7 +755,7 @@ function draw() {
 
     // Projectiles
     gameState.projectiles.forEach(p => {
-        ctx.fillStyle = p.isTraitor ? '#ff0000' : '#ffcc00'; // Traitor bullets are red
+        ctx.fillStyle = p.isTraitor ? '#ff0000' : '#ffcc00'; 
         ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI * 2); ctx.fill();
     });
 
@@ -668,6 +767,50 @@ function draw() {
         ctx.arc(b.x, b.y, 12 + pulse, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#f00'; ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI * 2); ctx.fill();
     });
+
+    // Steam Cloud
+    if (gameState.train.steamActive) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.beginPath(); ctx.arc(60, 0, 120, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // --- TUNNEL OF DARKNESS OVERLAY ---
+    if (gameState.tunnel && gameState.tunnel.active) {
+        ctx.fillStyle = 'black';
+        ctx.fillRect(-5000 + camX, -5000 + camY, 10000, 10000); // Cover everything
+        
+        ctx.globalCompositeOperation = 'destination-out';
+        
+        // Train Headlight
+        let grad = ctx.createRadialGradient(280, 0, 10, 280, 0, 400);
+        grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+        grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath(); ctx.moveTo(280, 0); ctx.arc(280, 0, 400, -Math.PI/4, Math.PI/4); ctx.fill();
+
+        // Player Lights & Flashlights
+        for (let id in gameState.players) {
+            let p = gameState.players[id];
+            if (p.dead) continue;
+            
+            // Base small circle
+            let pGrad = ctx.createRadialGradient(p.x, p.y, 10, p.x, p.y, 100);
+            pGrad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            pGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = pGrad;
+            ctx.beginPath(); ctx.arc(p.x, p.y, 100, 0, Math.PI * 2); ctx.fill();
+
+            // Flashlight Cone
+            if (p.hasFlashlight && p.flashlightOn) {
+                let fGrad = ctx.createRadialGradient(p.x, p.y, 10, p.x, p.y, 300);
+                fGrad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+                fGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                ctx.fillStyle = fGrad;
+                ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.arc(p.x, p.y, 300, p.aimAngle - 0.3, p.aimAngle + 0.3); ctx.fill();
+            }
+        }
+        ctx.globalCompositeOperation = 'source-over'; // Reset
+    }
 
     ctx.restore();
 
