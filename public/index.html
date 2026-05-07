@@ -80,7 +80,8 @@
             <div class="stat-row">
                 <span style="color: #f39c12;">Bottles: <span id="inv-bottles">0</span></span> | 
                 <span style="color: #d35400;">Barrels: <span id="inv-barrels">0</span></span> |
-                <span style="color: #fff;">Watches: <span id="inv-watches">0</span>/2</span>
+                <span style="color: #fff;">Watches: <span id="inv-watches">0</span>/2</span> |
+                <span style="color: #ff6347;">Meat: <span id="inv-rawmeat">0</span>/<span id="inv-cookedmeat">0</span></span>
             </div>
         </div>
         
@@ -92,7 +93,7 @@
 
         <div id="controls">[WASD] Move | [Mouse] Aim | [Click] <span id="pc-action-text">Shoot</span><br>
             [E] Interact/Dump/Drink | [R] Reload | [B] Place Barrel<br>[F] Throw Bomb | [Space] Knife/Break Crate<br>
-            [L] Flashlight | [Hold T] Release Steam
+            [L] Flashlight | [Hold T] Release Steam | [Y] Eat Meat
         </div>
         <div id="messages"></div>
     </div>
@@ -120,6 +121,7 @@
             <button id="btn-knife" class="action-btn">KNIFE</button>
             <button id="btn-flashlight" class="action-btn">LIGHT</button>
             <button id="btn-steam" class="action-btn">STEAM</button>
+            <button id="btn-eat" class="action-btn">EAT</button>
         </div>
     </div>
 
@@ -168,6 +170,11 @@
 
     <div id="victory" class="hidden overlay-box">
         <h1 class="text-gold">wowww you win Tyler wowwww!</h1>
+        <h2>HALL OF FAME</h2>
+        <p>The Lead-Slinger (Most Kills): <span id="hof-kills" class="text-red"></span></p>
+        <p>The Drunkard (Most Beer): <span id="hof-drunk" class="text-orange"></span></p>
+        <p>The Workhorse (Most Coal): <span id="hof-coal" class="text-blue"></span></p>
+        <p>The Snake (Traitor): <span id="hof-snake" class="text-green"></span></p>
         <button class="menu-btn" onclick="window.ui.voteRestart()">Vote Restart</button>
     </div>
 
