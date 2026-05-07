@@ -1,186 +1,180 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Transcontinental Survival</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <!-- Beautiful Main Menu & Lobby System -->
-    <div id="menu-container">
-        <div id="screen-main" class="menu-panel">
-            <h1 class="game-title">TRANSCONTINENTAL<br><span class="subtitle">1870s SURVIVAL</span></h1>
-            <input type="text" id="playerName" value="Conductor" maxlength="12" placeholder="Enter Your Name"><br>
-            <button class="menu-btn" onclick="window.ui.showScreen('screen-create')">CREATE TRAIN</button>
-            <button class="menu-btn" onclick="window.ui.showJoin()">JOIN TRAIN</button>
-            <button class="menu-btn" onclick="window.ui.showScreen('screen-settings')">SETTINGS</button>
-        </div>
+body {
+    margin: 0; overflow: hidden; background-color: #111;
+    color: white; font-family: 'Courier New', Courier, monospace;
+    touch-action: none; user-select: none;
+}
 
-        <div id="screen-settings" class="menu-panel hidden">
-            <h2>SETTINGS</h2>
-            <div class="setting-group">
-                <label class="setting-item">
-                    <input type="checkbox" id="mobile-toggle"> Force Mobile Joysticks
-                </label><br><br>
-                <label class="setting-item">
-                    <input type="checkbox" id="autolock-toggle"> Enable Auto-Lock (Heat-Sync)
-                </label>
-            </div>
-            <br>
-            <button class="menu-btn" onclick="window.ui.saveSettings()">SAVE & BACK</button>
-        </div>
+canvas { display: block; transition: filter 0.5s, transform 0.5s; }
 
-        <div id="screen-create" class="menu-panel hidden">
-            <h2>CREATE LOBBY</h2>
-            <input type="text" id="lobbyName" value="Express Train" placeholder="Lobby Name"><br>
-            <input type="number" id="maxPlayers" min="1" max="6" value="6" placeholder="Max Players"><br>
-            <input type="text" id="lobbyPassword" placeholder="Password (Leave blank for public)"><br>
-            <div class="setting-group" style="margin: 15px 0; text-align: left;">
-                <label class="setting-item" style="color: #ff4444; font-weight: bold;">
-                    <input type="checkbox" id="traitor-toggle" checked> Enable Traitor Role
-                </label>
-            </div>
-            <button class="menu-btn" onclick="window.ui.createLobby()">LAUNCH TRAIN</button>
-            <button class="menu-btn" onclick="window.ui.showScreen('screen-main')">BACK</button>
-        </div>
+/* Text Colors */
+.text-red { color: #ff4444; }
+.text-green { color: #44ff44; }
+.text-gold { color: #ffd700; }
+.text-orange { color: #ffaa00; }
+.text-blue { color: #87ceeb; }
 
-        <div id="screen-join" class="menu-panel hidden">
-            <h2>AVAILABLE TRAINS</h2>
-            <div id="lobby-list"></div>
-            <button class="menu-btn" onclick="window.ui.showScreen('screen-main')" style="margin-top: 15px;">BACK</button>
-        </div>
+/* Drunk Effects */
+@keyframes drunkWavy1 {
+    0% { transform: scale(1) rotate(0deg); filter: hue-rotate(0deg); }
+    50% { transform: scale(1.02) rotate(2deg); filter: hue-rotate(45deg); }
+    100% { transform: scale(1) rotate(0deg); filter: hue-rotate(0deg); }
+}
+@keyframes drunkWavy2 {
+    0% { transform: scale(1.02) rotate(-2deg); filter: hue-rotate(0deg); }
+    50% { transform: scale(1.05) rotate(4deg); filter: hue-rotate(120deg); }
+    100% { transform: scale(1.02) rotate(-2deg); filter: hue-rotate(0deg); }
+}
+@keyframes drunkWavy3 {
+    0% { transform: scale(1.05) rotate(-4deg); filter: hue-rotate(0deg) blur(1px); }
+    50% { transform: scale(1.1) rotate(6deg); filter: hue-rotate(240deg) blur(3px); }
+    100% { transform: scale(1.05) rotate(-4deg); filter: hue-rotate(360deg) blur(1px); }
+}
 
-        <div id="screen-lobby" class="menu-panel hidden">
-            <h2 id="lobby-title">LOBBY</h2>
-            <ul id="player-list"></ul>
-            <button class="menu-btn" onclick="window.ui.startGame()">DEPART NOW</button>
-        </div>
-    </div>
+.drunk-1 { animation: drunkWavy1 4s infinite ease-in-out; }
+.drunk-2 { animation: drunkWavy2 3s infinite ease-in-out; }
+.drunk-3 { animation: drunkWavy3 1.5s infinite ease-in-out; }
 
-    <!-- Role Reveal Overlay (Among Us Style) -->
-    <div id="role-reveal" class="hidden">
-        <h1 id="role-title">ROLE</h1>
-        <p id="role-desc">Description</p>
-    </div>
+/* Beautiful Menu System */
+.hidden { display: none !important; }
 
-    <!-- In-Game UI -->
-    <div id="game-ui" class="hidden">
-        <div id="stats">
-            <div class="stat-row">HP: <span id="hp" class="text-green">120</span> | Ammo: <span id="mag">5</span>/<span id="ammo">32</span> | $: <span id="money" class="text-gold">0</span></div>
-            <div class="stat-row">Dist: <span id="dist">0</span>/3181 km | Biome: <span id="biome">Forest</span></div>
-            <div class="stat-row">Fuel: <span id="fuel" class="text-orange">1003</span> | Speed: <span id="speed">0</span> km/h | Cold: <span id="cold" class="text-blue">167</span></div>
-            <div class="stat-row">
-                <span style="color: gold;">G: <span id="inv-gold">0</span>/11</span> | 
-                <span style="color: silver;">S: <span id="inv-silver">0</span>/15</span> | 
-                <span style="color: #aaa;">C: <span id="inv-coal">0</span>/27</span> |
-                <span style="color: #d2b48c;">Skins: <span id="inv-skins">0</span></span> |
-                <span style="color: #8b5a2b;">Planks: <span id="inv-planks">0</span></span>
-            </div>
-            <div class="stat-row">
-                <span style="color: #f39c12;">Bottles: <span id="inv-bottles">0</span></span> | 
-                <span style="color: #d35400;">Barrels: <span id="inv-barrels">0</span></span> |
-                <span style="color: #fff;">Watches: <span id="inv-watches">0</span>/2</span> |
-                <span style="color: #ff6347;">Meat: <span id="inv-rawmeat">0</span>/<span id="inv-cookedmeat">0</span></span>
-            </div>
-        </div>
-        
-        <!-- Bridge Out HUD -->
-        <div id="bridge-ui" class="hidden">
-            ⚠️ BRIDGE OUT ⚠️<br>
-            Planks: <span id="bridge-planks">0/10</span>
-        </div>
+#menu-container {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: radial-gradient(circle at center, #3e2723 0%, #1a110b 100%);
+    display: flex; align-items: center; justify-content: center; z-index: 1000;
+}
 
-        <div id="controls">[WASD] Move | [Mouse] Aim | [Click] <span id="pc-action-text">Shoot</span><br>
-            [E] Interact/Dump/Drink | [R] Reload | [B] Place Barrel<br>[F] Throw Bomb | [Space] Knife/Break Crate<br>
-            [L] Flashlight | [Hold T] Release Steam | [Y] Eat Meat
-        </div>
-        <div id="messages"></div>
-    </div>
+.menu-panel {
+    background: rgba(20, 10, 5, 0.95); padding: 40px; 
+    border: 4px solid #8b4513; border-radius: 12px; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.5);
+    text-align: center; min-width: 350px;
+}
 
-    <!-- Departure Warning -->
-    <div id="departure-warning" class="hidden">
-        TRAIN DEPARTING IN <span id="dep-timer">8</span>s!
-    </div>
+.game-title { font-size: 32px; color: #ffd700; text-shadow: 2px 2px 4px #000; margin-bottom: 5px; }
+.subtitle { font-size: 18px; color: #aaa; letter-spacing: 2px; }
 
-    <!-- Mobile Dual Joysticks & Side Buttons -->
-    <div id="mobile-controls" class="hidden">
-        <div id="move-joystick-container" class="joystick-base">
-            <div id="move-joystick-knob" class="joystick-knob"></div>
-        </div>
-        <div id="aim-joystick-container" class="joystick-base">
-            <div id="aim-joystick-knob" class="joystick-knob"></div>
-        </div>
+input[type="text"], input[type="number"] {
+    display: block; width: 90%; padding: 12px; margin: 15px auto;
+    background: #111; color: #fff; border: 2px solid #5d2e0a; 
+    border-radius: 6px; font-family: inherit; font-size: 16px; text-align: center;
+}
+input:focus { outline: none; border-color: #ffd700; }
 
-        <div id="mobile-actions">
-            <button id="btn-shoot" class="action-btn primary-btn">FIRE</button>
-            <button id="btn-interact" class="action-btn">E</button>
-            <button id="btn-reload" class="action-btn">R</button>
-            <button id="btn-bomb" class="action-btn">F</button>
-            <button id="btn-barrel" class="action-btn">B</button>
-            <button id="btn-knife" class="action-btn">KNIFE</button>
-            <button id="btn-flashlight" class="action-btn">LIGHT</button>
-            <button id="btn-steam" class="action-btn">STEAM</button>
-            <button id="btn-eat" class="action-btn">EAT</button>
-        </div>
-    </div>
+input[type="range"] {
+    width: 60%; margin: 10px; vertical-align: middle;
+}
 
-    <!-- Overlays -->
-    <div id="shop" class="hidden overlay-box">
-        <h2>Town Shop</h2>
-        <div id="shop-items"></div>
-        <button class="menu-btn" onclick="window.ui.closeShop()">Close</button>
-    </div>
+.menu-btn {
+    display: block; width: 100%; padding: 15px; margin: 10px 0; 
+    background: linear-gradient(to bottom, #8b4513, #5d2e0a); color: white;
+    border: 2px solid #3e1f04; border-radius: 6px; cursor: pointer; 
+    font-family: inherit; font-weight: bold; font-size: 18px; text-shadow: 1px 1px 2px #000;
+    transition: all 0.2s;
+}
+.menu-btn:hover { background: linear-gradient(to bottom, #a0522d, #8b4513); transform: scale(1.02); }
 
-    <div id="storage-menu" class="hidden overlay-box">
-        <h2 class="text-gold">STORAGE CAR</h2>
-        <p>Capacity: <span id="storage-cap">0/99</span></p>
-        <div style="text-align: left; margin: 10px 0;">
-            <label>Gold: <input type="range" id="slider-gold" min="0" max="0" value="0" oninput="window.ui.updateStorageUI()"><span id="val-gold">0</span></label><br>
-            <label>Silver: <input type="range" id="slider-silver" min="0" max="0" value="0" oninput="window.ui.updateStorageUI()"><span id="val-silver">0</span></label><br>
-            <label>Coal: <input type="range" id="slider-coal" min="0" max="0" value="0" oninput="window.ui.updateStorageUI()"><span id="val-coal">0</span></label>
-        </div>
-        <button class="menu-btn" onclick="window.ui.depositStorage()">Deposit</button>
-        <button class="menu-btn" onclick="window.ui.closeStorage()">Close</button>
-    </div>
+#lobby-list { max-height: 200px; overflow-y: auto; text-align: left; margin-bottom: 15px; background: #111; border: 2px solid #5d2e0a; border-radius: 6px; padding: 5px; }
+.lobby-item { padding: 12px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+.lobby-item:last-child { border-bottom: none; }
+.lobby-item button { width: auto; padding: 8px 15px; margin: 0; font-size: 14px; }
+#player-list { list-style: none; padding: 0; font-size: 20px; font-weight: bold; background: #111; border-radius: 6px; padding: 10px; }
 
-    <div id="revive-menu" class="hidden overlay-box">
-        <h2 class="text-gold">REVIVE PLAYER</h2>
-        <p>Select a fallen comrade to revive:</p>
-        <div id="dead-players-list"></div>
-        <button class="menu-btn" onclick="window.ui.closeRevive()">Cancel</button>
-    </div>
+/* Game UI */
+#stats {
+    position: absolute; top: 15px; left: 15px; pointer-events: none;
+    background: rgba(0,0,0,0.8); padding: 15px; border: 2px solid #5d2e0a; 
+    border-radius: 8px; font-size: 15px; z-index: 10; line-height: 1.5;
+}
+#controls {
+    position: absolute; top: 15px; right: 15px; pointer-events: none;
+    background: rgba(0,0,0,0.8); padding: 15px; border: 2px solid #5d2e0a; 
+    border-radius: 8px; font-size: 13px; text-align: right; z-index: 10; line-height: 1.5;
+}
+#messages {
+    position: absolute; top: 160px; left: 15px; color: #ff4444; font-weight: bold; font-size: 22px;
+    background: rgba(0,0,0,0.7); padding: 10px 15px; border-radius: 8px; z-index: 10; text-shadow: 1px 1px 0 #000;
+}
+#messages:empty { display: none; }
 
-    <div id="gambling-menu" class="hidden overlay-box">
-        <h2 id="gamble-title" class="text-gold">PLACE YOUR BETS</h2>
-        <p id="gamble-timer" class="text-red">Time left: 10s</p>
-        <div id="gamble-options"></div>
-        <button class="menu-btn" onclick="window.ui.closeGambling()">Close</button>
-    </div>
+#departure-warning {
+    position: absolute; top: 20%; left: 50%; transform: translateX(-50%);
+    font-size: 40px; color: #ff3333; font-weight: bold; text-align: center;
+    background: rgba(0,0,0,0.9); padding: 20px 40px; border: 4px solid #ff3333; 
+    border-radius: 12px; z-index: 90; box-shadow: 0 0 30px rgba(255,0,0,0.5);
+}
 
-    <div id="death" class="hidden overlay-box">
-        <h1 class="text-red">YOU DIED</h1>
-        <button class="menu-btn" onclick="window.ui.spectateNext()">Spectate Next</button>
-    </div>
+#bridge-ui {
+    position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
+    background: rgba(200, 50, 50, 0.9); padding: 10px 20px; border: 2px solid #ffaaaa;
+    border-radius: 8px; font-size: 18px; font-weight: bold; text-align: center; z-index: 10;
+    box-shadow: 0 0 15px rgba(255,0,0,0.5);
+}
 
-    <div id="all-dead" class="hidden overlay-box">
-        <h1 class="text-red">GAME OVER</h1>
-        <button class="menu-btn" onclick="window.ui.voteRestart()">Vote Restart (50%)</button>
-    </div>
+/* Role Reveal Animation */
+#role-reveal {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.95); z-index: 2000;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+}
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: scale(0.8); } 
+    15% { opacity: 1; transform: scale(1); } 
+    85% { opacity: 1; transform: scale(1); } 
+    100% { opacity: 0; transform: scale(1.2); }
+}
+#role-title { font-size: 70px; margin: 0; text-shadow: 2px 2px 10px #000; letter-spacing: 5px; }
+#role-desc { font-size: 24px; color: #ddd; margin-top: 10px; }
 
-    <div id="victory" class="hidden overlay-box">
-        <h1 class="text-gold">wowww you win Tyler wowwww!</h1>
-        <h2>HALL OF FAME</h2>
-        <p>The Lead-Slinger (Most Kills): <span id="hof-kills" class="text-red"></span></p>
-        <p>The Drunkard (Most Beer): <span id="hof-drunk" class="text-orange"></span></p>
-        <p>The Workhorse (Most Coal): <span id="hof-coal" class="text-blue"></span></p>
-        <p>The Snake (Traitor): <span id="hof-snake" class="text-green"></span></p>
-        <button class="menu-btn" onclick="window.ui.voteRestart()">Vote Restart</button>
-    </div>
+/* Repositioned Mobile Joysticks */
+.joystick-base {
+    position: absolute; width: 130px; height: 130px;
+    background: rgba(255,255,255,0.15); border: 3px solid rgba(255,255,255,0.4);
+    border-radius: 50%; bottom: 80px; pointer-events: auto; z-index: 50;
+}
+#move-joystick-container { left: 50px; }
+#aim-joystick-container { right: 50px; }
 
-    <canvas id="gameCanvas" class="hidden"></canvas>
+.joystick-knob {
+    position: absolute; width: 60px; height: 60px;
+    background: rgba(255,255,255,0.7); border-radius: 50%;
+    top: 35px; left: 35px; pointer-events: none; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="client.js"></script>
-</body>
-</html>
+/* Repositioned Mobile Action Buttons */
+#mobile-actions {
+    position: absolute; bottom: 240px; right: 30px;
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; z-index: 50;
+}
+.action-btn {
+    width: 65px; height: 65px; border-radius: 50%; font-size: 12px; font-weight: bold;
+    background: rgba(0,0,0,0.6); color: white; border: 2px solid #aaa; 
+    padding: 0; margin: 0; box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+}
+.primary-btn {
+    background: rgba(200, 50, 50, 0.7); border-color: #ffaaaa; width: 75px; height: 75px;
+    grid-column: span 3; justify-self: center; font-size: 16px;
+}
+
+.overlay-box {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: rgba(20, 10, 5, 0.95); padding: 30px; border: 4px solid #8b4513;
+    text-align: center; z-index: 200; border-radius: 12px; min-width: 300px;
+}
+
+/* --- SCROLLABLE MENUS --- */
+#shop, #revive-menu, #gambling-menu, #storage-menu {
+    max-height: 85vh; display: flex; flex-direction: column;
+}
+#shop-items, #dead-players-list, #gamble-options {
+    overflow-y: auto; max-height: 50vh; margin-bottom: 15px; padding-right: 10px;
+}
+#shop-items button, #dead-players-list button, #gamble-options button { 
+    display: block; width: 100%; margin-bottom: 8px; 
+}
+
+/* Custom 1870s-Themed Scrollbar */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: #2a1508; border-radius: 5px; border: 1px solid #5d2e0a; }
+::-webkit-scrollbar-thumb { background: #8b4513; border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: #a0522d; }
