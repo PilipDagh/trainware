@@ -1,3 +1,4 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,107 +10,237 @@
 <body>
     <canvas id="game-canvas"></canvas>
 
-    <div class="ui-layer">
-        <div id="hud">
-            <div id="health-display">HP: 100</div>
-            <div id="ammo-display">Ammo: 30</div>
-            <div id="money-display">Money: $0</div>
-            <div id="role-display">Role: Normal</div>
-            <div id="inventory-display"></div>
-        </div>
-        
-        <div id="hud-right">
-            <div id="distance-display">Distance: 0 / 3181 km</div>
-            <div id="fuel-display">Fuel: 1003 / 1003</div>
-            <div id="speed-display">Speed: 0 km/h</div>
-            <div id="pressure-display">Pressure: 0 / 100</div>
+    <div id="ui-layer">
+        <!-- HUD -->
+        <div id="hud-top-left">
+            <div id="hp-bar-container"><div id="hp-bar"></div><span id="hp-text">100 / 100</span></div>
+            <div id="role-display">Role: <span id="role-name">Normal</span></div>
+            <div id="ammo-display">Ammo: <span id="ammo-count">30</span></div>
+            <div id="money-display">Money: $<span id="money-count">0</span></div>
+            <div id="inventory-display">
+                G: <span id="inv-gold">0</span>/11 | 
+                S: <span id="inv-silver">0</span>/15 | 
+                C: <span id="inv-coal">0</span>/27 | 
+                M: <span id="inv-meat">0</span>/7 | 
+                W: <span id="inv-watches">0</span>/2 |
+                Sk: <span id="inv-skins">0</span>
+            </div>
         </div>
 
-        <div id="warning-msg">TRAIN DEPARTING IN 8 SECONDS</div>
+        <div id="hud-top-right">
+            <div id="distance-display">Distance: <span id="dist-count">0</span> / 3181 km</div>
+            <div id="biome-display">Biome: <span id="biome-name">Forest</span></div>
+            <div id="fuel-display">Fuel: <span id="fuel-count">1003</span> / 1003</div>
+            <div id="speed-display">Speed: <span id="speed-count">0</span> km/h</div>
+            <div id="pressure-display">Pressure: <span id="pressure-count">0</span> / 100</div>
+            <div id="planks-display" style="display:none; color:orange;">Planks: <span id="planks-count">0</span> / <span id="planks-needed">8</span></div>
+        </div>
+
+        <div id="interaction-prompt" style="display:none;">Press E to Interact</div>
+
+        <!-- Massive Red Departure Warning -->
+        <div id="departure-warning" style="display:none;">
+            TRAIN DEPARTING IN <span id="departure-timer">8</span> SECONDS
+        </div>
 
         <!-- Main Menu -->
-        <div id="main-menu" class="modal">
-            <h2>Transcontinental 1870</h2>
-            <input type="text" id="player-name" placeholder="Enter Name" maxlength="12">
-            <input type="text" id="lobby-id" placeholder="Lobby Code">
-            <button onclick="createLobby()">Create Lobby</button>
-            <button onclick="joinLobby()">Join Lobby</button>
-            <hr style="border-color: #3e2723;">
-            <label><input type="checkbox" id="auto-lock"> Auto Lock-On Heat-Sync</label><br>
-            <label><input type="checkbox" id="mobile-mode"> Mobile Mode</label>
+        <div id="main-menu" class="modal active">
+            <h1>Transcontinental 1870</h1>
+            <div class="menu-content">
+                <input type="text" id="player-name" placeholder="Enter your name" maxlength="15">
+                <input type="text" id="lobby-id-input" placeholder="Lobby Code (Leave blank to create)">
+                
+                <div class="settings-group">
+                    <label><input type="checkbox" id="setting-autolock"> Auto Lock-On Heat-Sync</label>
+                    <label><input type="checkbox" id="setting-mobile"> Mobile Mode</label>
+                    <label><input type="checkbox" id="setting-traitor"> Traitor Role (Toggle)</label>
+                </div>
+
+                <button id="btn-create-lobby">Create Lobby</button>
+                <button id="btn-join-lobby">Join Lobby</button>
+            </div>
         </div>
 
-        <!-- Trading Menu -->
-        <div id="trade-menu" class="modal">
+        <!-- Trading Car Menu -->
+        <div id="trading-menu" class="modal">
             <h2>Trading Car</h2>
-            <div class="trade-container">
-                <div class="trade-side" id="trade-self">
+            <div class="trade-layout">
+                <!-- Player 1 Side -->
+                <div class="trade-side" id="trade-my-side">
                     <h3>Your Offer</h3>
-                    <div class="slider-group">Gold: <input type="range" id="t-gold" min="0" max="0" value="0"><span id="tv-gold">0</span></div>
-                    <div class="slider-group">Silver: <input type="range" id="t-silver" min="0" max="0" value="0"><span id="tv-silver">0</span></div>
-                    <div class="slider-group">Coal: <input type="range" id="t-coal" min="0" max="0" value="0"><span id="tv-coal">0</span></div>
-                    <div class="slider-group">Skins: <input type="range" id="t-skins" min="0" max="0" value="0"><span id="tv-skins">0</span></div>
-                    <div class="slider-group">Money: <input type="range" id="t-money" min="0" max="0" value="0"><span id="tv-money">$0</span></div>
+                    <div class="trade-item" id="ti-gold">
+                        <label>Gold (<span id="t-max-gold">0</span>)</label>
+                        <input type="range" id="t-slider-gold" min="0" max="0" value="0">
+                        <span class="t-val" id="t-val-gold">0</span>
+                    </div>
+                    <div class="trade-item" id="ti-silver">
+                        <label>Silver (<span id="t-max-silver">0</span>)</label>
+                        <input type="range" id="t-slider-silver" min="0" max="0" value="0">
+                        <span class="t-val" id="t-val-silver">0</span>
+                    </div>
+                    <div class="trade-item" id="ti-coal">
+                        <label>Coal (<span id="t-max-coal">0</span>)</label>
+                        <input type="range" id="t-slider-coal" min="0" max="0" value="0">
+                        <span class="t-val" id="t-val-coal">0</span>
+                    </div>
+                    <div class="trade-item" id="ti-skins">
+                        <label>Skins (<span id="t-max-skins">0</span>)</label>
+                        <input type="range" id="t-slider-skins" min="0" max="0" value="0">
+                        <span class="t-val" id="t-val-skins">0</span>
+                    </div>
+                    <div class="trade-item" id="ti-money">
+                        <label>Money ($<span id="t-max-money">0</span>)</label>
+                        <input type="range" id="t-slider-money" min="0" max="0" value="0">
+                        <span class="t-val" id="t-val-money">$0</span>
+                    </div>
                 </div>
-                <div class="trade-side" id="trade-other">
-                    <h3 id="trade-other-status">Waiting For Another Player...</h3>
-                    <div id="trade-other-items"></div>
+
+                <!-- Player 2 Side -->
+                <div class="trade-side" id="trade-other-side">
+                    <h3 id="trade-waiting-text">Waiting For Another Player...</h3>
+                    <div id="trade-other-offers" style="display:none;">
+                        <h3>Their Offer</h3>
+                        <p>Gold: <span id="to-val-gold">0</span></p>
+                        <p>Silver: <span id="to-val-silver">0</span></p>
+                        <p>Coal: <span id="to-val-coal">0</span></p>
+                        <p>Skins: <span id="to-val-skins">0</span></p>
+                        <p>Money: $<span id="to-val-money">0</span></p>
+                    </div>
                 </div>
             </div>
-            <h3 id="trade-countdown" style="color:red; display:none;">Trade in 5...</h3>
-            <button onclick="confirmTrade()">Confirm</button>
-            <button onclick="declineTrade()">Decline</button>
+            <div id="trade-countdown-display" style="display:none; color:red; font-size:24px; margin-top:10px;">
+                Trade completing in <span id="trade-timer">5</span>...
+            </div>
+            <div class="modal-buttons">
+                <button id="btn-trade-confirm">Confirm</button>
+                <button id="btn-trade-decline">Decline</button>
+            </div>
         </div>
 
-        <!-- Storage Menu -->
+        <!-- Storage Car Menu -->
         <div id="storage-menu" class="modal">
-            <h2>Storage Car (<span id="storage-count">0</span>/6)</h2>
-            <p>Capacity: <span id="storage-cap">0</span></p>
-            <button onclick="buyStorageCar()">Buy Car ($41)</button>
+            <h2>Storage Car</h2>
+            <p>Cars Owned: <span id="storage-cars-count">0</span> / 6</p>
+            <p>Total Capacity: <span id="storage-used">0</span> / <span id="storage-max">0</span></p>
+            <button id="btn-buy-storage">Buy Storage Car ($41)</button>
             <hr>
-            <div class="slider-group">Deposit Gold: <input type="range" id="s-gold" min="0" max="0" value="0"></div>
-            <div class="slider-group">Deposit Silver: <input type="range" id="s-silver" min="0" max="0" value="0"></div>
-            <div class="slider-group">Deposit Coal: <input type="range" id="s-coal" min="0" max="0" value="0"></div>
-            <button onclick="depositStorage()">Deposit</button>
-            <button onclick="closeModal('storage-menu')">Close</button>
+            <div class="storage-sliders">
+                <div class="storage-item">
+                    <label>Deposit Gold</label>
+                    <input type="range" id="s-slider-gold" min="0" max="0" value="0">
+                    <span id="s-val-gold">0</span>
+                </div>
+                <div class="storage-item">
+                    <label>Deposit Silver</label>
+                    <input type="range" id="s-slider-silver" min="0" max="0" value="0">
+                    <span id="s-val-silver">0</span>
+                </div>
+                <div class="storage-item">
+                    <label>Deposit Coal</label>
+                    <input type="range" id="s-slider-coal" min="0" max="0" value="0">
+                    <span id="s-val-coal">0</span>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button id="btn-storage-deposit">Deposit</button>
+                <button class="btn-close-modal">Close</button>
+            </div>
         </div>
 
-        <!-- Gambling Menu -->
-        <div id="gamble-menu" class="modal">
+        <!-- Gambling Car Menu -->
+        <div id="gambling-menu" class="modal">
             <h2>Gambling Car</h2>
-            <button onclick="gamble('horse')">Horse Race (4x) - $10</button>
-            <button onclick="gamble('roulette_red')">Roulette Red (2x) - $10</button>
-            <button onclick="gamble('roulette_green')">Roulette Green (14x) - $10</button>
-            <button onclick="gamble('poker')">Poker (3x) - $10</button>
-            <br><button onclick="closeModal('gamble-menu')">Leave</button>
+            <div class="gamble-options">
+                <div class="gamble-game">
+                    <h3>Horse Race (4x)</h3>
+                    <button class="btn-gamble" data-game="horse">Bet $10</button>
+                </div>
+                <div class="gamble-game">
+                    <h3>Roulette</h3>
+                    <button class="btn-gamble" data-game="roulette-red">Red (2x) $10</button>
+                    <button class="btn-gamble" data-game="roulette-black">Black (2x) $10</button>
+                    <button class="btn-gamble" data-game="roulette-green">Green (14x) $10</button>
+                </div>
+                <div class="gamble-game">
+                    <h3>Poker (3x)</h3>
+                    <p>33% Win Chance</p>
+                    <button class="btn-gamble" data-game="poker">Play $10</button>
+                </div>
+            </div>
+            <p id="gamble-result-text"></p>
+            <button class="btn-close-modal">Leave</button>
         </div>
 
-        <!-- Shop Menu -->
+        <!-- Town Shop Menu -->
         <div id="shop-menu" class="modal">
             <h2>Town Shop</h2>
-            <button onclick="buyItem('upgrade_speed')">Train Speed Upgrade ($100)</button>
-            <button onclick="buyItem('flashlight')">Flashlight ($11)</button>
-            <button onclick="buyItem('headlight')">Headlight Upgrade ($15)</button>
-            <button onclick="buyItem('revive')">Revive Kit ($21)</button>
-            <button onclick="buyItem('beer_bottle')">Beer Bottle x3 ($5)</button>
-            <button onclick="buyItem('beer_barrel')">Beer Barrel ($15)</button>
-            <br><button onclick="sellItems()">Sell All Valuables</button>
-            <br><button onclick="closeModal('shop-menu')">Leave</button>
+            <div class="shop-layout">
+                <div class="shop-sell">
+                    <h3>Sell Items</h3>
+                    <button id="btn-sell-gold">Sell Gold ($10/ea)</button>
+                    <button id="btn-sell-silver">Sell Silver ($5/ea)</button>
+                    <button id="btn-sell-skins">Sell Skins ($8/ea)</button>
+                </div>
+                <div class="shop-buy">
+                    <h3>Buy Items</h3>
+                    <button class="btn-buy" data-item="speed">Train Speed Upgrade ($100)</button>
+                    <button class="btn-buy" data-item="flashlight">Flashlight ($11)</button>
+                    <button class="btn-buy" data-item="headlight">Headlight Upgrade ($15)</button>
+                    <button class="btn-buy" data-item="revive">Revive Kit ($21)</button>
+                    <button class="btn-buy" data-item="beer-bottle">Beer Bottle x3 ($5)</button>
+                    <button class="btn-buy" data-item="beer-barrel">Beer Barrel ($15)</button>
+                    <button class="btn-buy" data-item="medkit">Bandages ($10)</button>
+                    <button class="btn-buy" data-item="ammo">Ammo x30 ($15)</button>
+                </div>
+            </div>
+            <button class="btn-close-modal">Leave Shop</button>
+        </div>
+
+        <!-- Revive Menu -->
+        <div id="revive-menu" class="modal">
+            <h2>Use Revive Kit</h2>
+            <div id="dead-players-list"></div>
+            <button class="btn-close-modal">Cancel</button>
+        </div>
+
+        <!-- Spectator UI -->
+        <div id="spectator-ui" style="display:none;">
+            <h2>SPECTATING: <span id="spectator-target-name">None</span></h2>
+            <p>Click or press Space to cycle players</p>
+            <button id="btn-vote-restart">Vote Restart (<span id="vote-count">0</span>/<span id="vote-needed">0</span>)</button>
         </div>
 
         <!-- Victory Screen -->
-        <div id="victory-screen" class="modal" style="width: 80%; height: 80%;">
-            <h1 style="font-size: 60px;">wowww you win Tyler wowwww</h1>
-            <h3>made by Julian, Kylin, and Tyler!</h3>
-            <div id="hall-of-fame" style="text-align: left; margin: 40px;"></div>
+        <div id="victory-screen" class="modal">
+            <h1 style="font-size: 48px; color: #ffd700;">wowww you win Tyler wowwww</h1>
+            <h3 style="color: #ccc;">made by Julian, Kylin, and Tyler!</h3>
+            <div id="hall-of-fame">
+                <h2>Hall of Fame</h2>
+                <p>Lead-Slinger (Most Dmg): <span id="hof-lead"></span></p>
+                <p>Drunkard (Most Sips): <span id="hof-drunk"></span></p>
+                <p>Workhorse (Most Mined): <span id="hof-work"></span></p>
+                <p>Snake (Most Betrayals): <span id="hof-snake"></span></p>
+            </div>
         </div>
 
         <!-- Mobile Controls -->
-        <div id="mobile-controls">
-            <div class="joystick" id="joy-move"></div>
-            <div class="joystick" id="joy-aim"></div>
-            <button class="action-btn" id="btn-interact" style="bottom: 100px;">E</button>
-            <button class="action-btn" id="btn-attack" style="bottom: 20px;">ATK</button>
+        <div id="mobile-controls" style="display:none;">
+            <div class="joystick-area" id="joystick-move-area">
+                <div class="joystick-base" id="joystick-move-base">
+                    <div class="joystick-stick" id="joystick-move-stick"></div>
+                </div>
+            </div>
+            <div class="joystick-area" id="joystick-aim-area">
+                <div class="joystick-base" id="joystick-aim-base">
+                    <div class="joystick-stick" id="joystick-aim-stick"></div>
+                </div>
+            </div>
+            <div class="mobile-buttons">
+                <button id="m-btn-interact">E</button>
+                <button id="m-btn-steam">T</button>
+                <button id="m-btn-eat">Y</button>
+                <button id="m-btn-light">L</button>
+            </div>
         </div>
     </div>
 
