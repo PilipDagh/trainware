@@ -1,180 +1,288 @@
-body {
-    margin: 0; overflow: hidden; background-color: #111;
-    color: white; font-family: 'Courier New', Courier, monospace;
-    touch-action: none; user-select: none;
+/* style.css */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    font-family: 'Courier New', Courier, Rockwell, serif;
 }
 
-canvas { display: block; transition: filter 0.5s, transform 0.5s; }
-
-/* Text Colors */
-.text-red { color: #ff4444; }
-.text-green { color: #44ff44; }
-.text-gold { color: #ffd700; }
-.text-orange { color: #ffaa00; }
-.text-blue { color: #87ceeb; }
-
-/* Drunk Effects */
-@keyframes drunkWavy1 {
-    0% { transform: scale(1) rotate(0deg); filter: hue-rotate(0deg); }
-    50% { transform: scale(1.02) rotate(2deg); filter: hue-rotate(45deg); }
-    100% { transform: scale(1) rotate(0deg); filter: hue-rotate(0deg); }
-}
-@keyframes drunkWavy2 {
-    0% { transform: scale(1.02) rotate(-2deg); filter: hue-rotate(0deg); }
-    50% { transform: scale(1.05) rotate(4deg); filter: hue-rotate(120deg); }
-    100% { transform: scale(1.02) rotate(-2deg); filter: hue-rotate(0deg); }
-}
-@keyframes drunkWavy3 {
-    0% { transform: scale(1.05) rotate(-4deg); filter: hue-rotate(0deg) blur(1px); }
-    50% { transform: scale(1.1) rotate(6deg); filter: hue-rotate(240deg) blur(3px); }
-    100% { transform: scale(1.05) rotate(-4deg); filter: hue-rotate(360deg) blur(1px); }
+body, html {
+    width: 100%;
+    height: 100%;
+    background-color: #1a1512;
+    color: #e5d8b8;
+    overflow: hidden;
 }
 
-.drunk-1 { animation: drunkWavy1 4s infinite ease-in-out; }
-.drunk-2 { animation: drunkWavy2 3s infinite ease-in-out; }
-.drunk-3 { animation: drunkWavy3 1.5s infinite ease-in-out; }
-
-/* Beautiful Menu System */
+/* === SCREENS & VISIBILITY === */
+.screen {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle, #2b221d 0%, #0d0a08 100%);
+    z-index: 10;
+}
 .hidden { display: none !important; }
+.active { display: flex; }
 
-#menu-container {
-    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-    background: radial-gradient(circle at center, #3e2723 0%, #1a110b 100%);
-    display: flex; align-items: center; justify-content: center; z-index: 1000;
+/* === GAME CANVAS === */
+#game-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    z-index: 1;
+    /* CSS driven wavy filter handled in client.js via canvas transforms for precision, 
+       but we ensure the element fills the screen natively here */
 }
 
-.menu-panel {
-    background: rgba(20, 10, 5, 0.95); padding: 40px; 
-    border: 4px solid #8b4513; border-radius: 12px; 
-    box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.5);
-    text-align: center; min-width: 350px;
+/* === WESTERN THEME UI ELEMENTS === */
+.western-border {
+    border: 4px solid #6b4c3a;
+    border-radius: 8px;
+    background: url('data:image/svg+xml;utf8,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="%232c1e16" /><line x1="0" y1="20" x2="100" y2="20" stroke="%231a100b" stroke-width="2" /></svg>');
+    box-shadow: inset 0 0 20px #000, 0 8px 16px rgba(0,0,0,0.8);
+    padding: 30px;
 }
 
-.game-title { font-size: 32px; color: #ffd700; text-shadow: 2px 2px 4px #000; margin-bottom: 5px; }
-.subtitle { font-size: 18px; color: #aaa; letter-spacing: 2px; }
-
-input[type="text"], input[type="number"] {
-    display: block; width: 90%; padding: 12px; margin: 15px auto;
-    background: #111; color: #fff; border: 2px solid #5d2e0a; 
-    border-radius: 6px; font-family: inherit; font-size: 16px; text-align: center;
-}
-input:focus { outline: none; border-color: #ffd700; }
-
-input[type="range"] {
-    width: 60%; margin: 10px; vertical-align: middle;
+.menu-box {
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
 }
 
-.menu-btn {
-    display: block; width: 100%; padding: 15px; margin: 10px 0; 
-    background: linear-gradient(to bottom, #8b4513, #5d2e0a); color: white;
-    border: 2px solid #3e1f04; border-radius: 6px; cursor: pointer; 
-    font-family: inherit; font-weight: bold; font-size: 18px; text-shadow: 1px 1px 2px #000;
-    transition: all 0.2s;
+h1 {
+    font-size: 2.5rem;
+    color: #d1a554;
+    text-shadow: 3px 3px 0 #000;
+    margin-bottom: 10px;
+    letter-spacing: 2px;
 }
-.menu-btn:hover { background: linear-gradient(to bottom, #a0522d, #8b4513); transform: scale(1.02); }
 
-#lobby-list { max-height: 200px; overflow-y: auto; text-align: left; margin-bottom: 15px; background: #111; border: 2px solid #5d2e0a; border-radius: 6px; padding: 5px; }
-.lobby-item { padding: 12px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
-.lobby-item:last-child { border-bottom: none; }
-.lobby-item button { width: auto; padding: 8px 15px; margin: 0; font-size: 14px; }
-#player-list { list-style: none; padding: 0; font-size: 20px; font-weight: bold; background: #111; border-radius: 6px; padding: 10px; }
+h2 {
+    font-size: 1.5rem;
+    color: #a4844a;
+    margin-bottom: 20px;
+}
 
-/* Game UI */
-#stats {
-    position: absolute; top: 15px; left: 15px; pointer-events: none;
-    background: rgba(0,0,0,0.8); padding: 15px; border: 2px solid #5d2e0a; 
-    border-radius: 8px; font-size: 15px; z-index: 10; line-height: 1.5;
+input[type="text"], input[type="number"], select {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    background: #110b08;
+    border: 2px solid #5a3d2b;
+    color: #e5d8b8;
+    font-size: 1.1rem;
+    outline: none;
 }
-#controls {
-    position: absolute; top: 15px; right: 15px; pointer-events: none;
-    background: rgba(0,0,0,0.8); padding: 15px; border: 2px solid #5d2e0a; 
-    border-radius: 8px; font-size: 13px; text-align: right; z-index: 10; line-height: 1.5;
+input:focus { border-color: #d1a554; }
+
+button {
+    background: linear-gradient(to bottom, #7e4b2d, #4a2915);
+    border: 2px solid #2a1508;
+    color: #e5d8b8;
+    padding: 12px 20px;
+    margin: 10px 5px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    box-shadow: 2px 2px 5px #000;
+    transition: transform 0.1s;
 }
-#messages {
-    position: absolute; top: 160px; left: 15px; color: #ff4444; font-weight: bold; font-size: 22px;
-    background: rgba(0,0,0,0.7); padding: 10px 15px; border-radius: 8px; z-index: 10; text-shadow: 1px 1px 0 #000;
+button:active { transform: scale(0.95); }
+button:hover { filter: brightness(1.2); }
+
+/* === LOBBY EXTRAS === */
+.settings {
+    display: flex;
+    justify-content: space-around;
+    margin: 15px 0;
+    font-size: 1.2rem;
 }
-#messages:empty { display: none; }
+#lobby-players {
+    margin-top: 20px;
+    text-align: left;
+    max-height: 150px;
+    overflow-y: auto;
+    font-size: 1.1rem;
+}
+
+/* === HUD === */
+.hud-panel {
+    position: absolute;
+    background: rgba(20, 13, 9, 0.85);
+    border: 2px solid #5a3d2b;
+    padding: 10px;
+    z-index: 5;
+    font-size: 1.1rem;
+    line-height: 1.4;
+    border-radius: 4px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.6);
+}
+#hud-top-left { top: 10px; left: 10px; }
+#hud-top-right { top: 10px; right: 10px; text-align: right; }
+#hud-bottom-left { bottom: 10px; left: 10px; }
+#hud-bottom-right { bottom: 10px; right: 10px; text-align: right; }
+
+#hud-cold-container { color: #8cbcf0; font-weight: bold; }
+
+.inventory h3 {
+    margin-bottom: 5px;
+    color: #d1a554;
+    border-bottom: 1px solid #5a3d2b;
+}
+
+/* === IN-GAME WARNINGS & ANIMATIONS === */
+#role-reveal {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 50;
+    animation: rolePop 4s ease-in-out forwards;
+}
+@keyframes rolePop {
+    0% { opacity: 0; transform: scale(0.5); }
+    15% { opacity: 1; transform: scale(1.1); }
+    20% { opacity: 1; transform: scale(1); }
+    80% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.5); pointer-events: none; }
+}
+
+#role-title { font-size: 4rem; color: #cc2a2a; text-shadow: 4px 4px #000; }
+#role-buffs { font-size: 1.5rem; color: #ddd; margin-top: 10px; }
 
 #departure-warning {
-    position: absolute; top: 20%; left: 50%; transform: translateX(-50%);
-    font-size: 40px; color: #ff3333; font-weight: bold; text-align: center;
-    background: rgba(0,0,0,0.9); padding: 20px 40px; border: 4px solid #ff3333; 
-    border-radius: 12px; z-index: 90; box-shadow: 0 0 30px rgba(255,0,0,0.5);
+    position: absolute;
+    top: 20%; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(200, 20, 20, 0.9);
+    padding: 20px 40px;
+    border: 4px solid #fff;
+    text-align: center;
+    z-index: 40;
+    animation: flashBox 0.5s infinite alternate;
+}
+@keyframes flashBox {
+    from { box-shadow: 0 0 10px #f00; }
+    to { box-shadow: 0 0 40px #f00, inset 0 0 20px #000; }
+}
+#departure-warning h1 { color: #fff; text-shadow: 2px 2px #000; font-size: 3rem; margin: 0; }
+
+#event-warning {
+    position: absolute;
+    top: 15%; left: 50%;
+    transform: translateX(-50%);
+    font-size: 2.5rem;
+    color: #ffaa00;
+    text-shadow: 2px 2px #000;
+    z-index: 35;
 }
 
-#bridge-ui {
-    position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
-    background: rgba(200, 50, 50, 0.9); padding: 10px 20px; border: 2px solid #ffaaaa;
-    border-radius: 8px; font-size: 18px; font-weight: bold; text-align: center; z-index: 10;
-    box-shadow: 0 0 15px rgba(255,0,0,0.5);
+#interaction-prompt {
+    position: absolute;
+    bottom: 25%; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8);
+    border: 2px solid #e5d8b8;
+    padding: 10px 20px;
+    font-size: 1.5rem;
+    z-index: 30;
 }
 
-/* Role Reveal Animation */
-#role-reveal {
-    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-    background: rgba(0,0,0,0.95); z-index: 2000;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    opacity: 0; pointer-events: none;
+/* === MODALS === */
+.modal {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.75);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 60;
 }
-@keyframes fadeInOut {
-    0% { opacity: 0; transform: scale(0.8); } 
-    15% { opacity: 1; transform: scale(1); } 
-    85% { opacity: 1; transform: scale(1); } 
-    100% { opacity: 0; transform: scale(1.2); }
+.modal-content {
+    background: #1a1512;
+    min-width: 400px;
+    max-width: 600px;
+    text-align: center;
 }
-#role-title { font-size: 70px; margin: 0; text-shadow: 2px 2px 10px #000; letter-spacing: 5px; }
-#role-desc { font-size: 24px; color: #ddd; margin-top: 10px; }
+.close-btn { background: #662222; }
 
-/* Repositioned Mobile Joysticks */
-.joystick-base {
-    position: absolute; width: 130px; height: 130px;
-    background: rgba(255,255,255,0.15); border: 3px solid rgba(255,255,255,0.4);
-    border-radius: 50%; bottom: 80px; pointer-events: auto; z-index: 50;
+/* Shop Layout */
+.shop-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin: 15px 0;
 }
-#move-joystick-container { left: 50px; }
-#aim-joystick-container { right: 50px; }
+.shop-item {
+    border: 1px solid #5a3d2b;
+    padding: 10px;
+    background: #110b08;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.shop-item p { font-size: 0.9rem; margin-bottom: 5px; }
 
-.joystick-knob {
-    position: absolute; width: 60px; height: 60px;
-    background: rgba(255,255,255,0.7); border-radius: 50%;
-    top: 35px; left: 35px; pointer-events: none; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+/* Sliders */
+.slider-group { margin: 15px 0; text-align: left; }
+.slider-group input[type="range"] {
+    width: 100%;
+    accent-color: #d1a554;
 }
 
-/* Repositioned Mobile Action Buttons */
-#mobile-actions {
-    position: absolute; bottom: 240px; right: 30px;
-    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; z-index: 50;
+/* === MOBILE CONTROLS === */
+#mobile-controls {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none; /* Let touches pass through to canvas */
+    z-index: 20;
+}
+.joystick {
+    position: absolute;
+    bottom: 40px;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: rgba(100, 100, 100, 0.4);
+    border: 2px solid rgba(255,255,255,0.3);
+    pointer-events: auto; /* Catch touch */
+}
+#joy-left { left: 40px; }
+#joy-right { right: 40px; }
+.joy-knob {
+    position: absolute;
+    top: 30px; left: 30px;
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: rgba(200, 200, 200, 0.8);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+#mobile-buttons {
+    position: absolute;
+    bottom: 180px; right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: auto;
 }
 .action-btn {
-    width: 65px; height: 65px; border-radius: 50%; font-size: 12px; font-weight: bold;
-    background: rgba(0,0,0,0.6); color: white; border: 2px solid #aaa; 
-    padding: 0; margin: 0; box-shadow: 0 4px 6px rgba(0,0,0,0.5);
-}
-.primary-btn {
-    background: rgba(200, 50, 50, 0.7); border-color: #ffaaaa; width: 75px; height: 75px;
-    grid-column: span 3; justify-self: center; font-size: 16px;
-}
-
-.overlay-box {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    background: rgba(20, 10, 5, 0.95); padding: 30px; border: 4px solid #8b4513;
-    text-align: center; z-index: 200; border-radius: 12px; min-width: 300px;
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    padding: 0;
+    margin: 0;
+    background: rgba(200, 50, 50, 0.7);
 }
 
-/* --- SCROLLABLE MENUS --- */
-#shop, #revive-menu, #gambling-menu, #storage-menu {
-    max-height: 85vh; display: flex; flex-direction: column;
-}
-#shop-items, #dead-players-list, #gamble-options {
-    overflow-y: auto; max-height: 50vh; margin-bottom: 15px; padding-right: 10px;
-}
-#shop-items button, #dead-players-list button, #gamble-options button { 
-    display: block; width: 100%; margin-bottom: 8px; 
-}
-
-/* Custom 1870s-Themed Scrollbar */
-::-webkit-scrollbar { width: 10px; }
-::-webkit-scrollbar-track { background: #2a1508; border-radius: 5px; border: 1px solid #5d2e0a; }
-::-webkit-scrollbar-thumb { background: #8b4513; border-radius: 5px; }
-::-webkit-scrollbar-thumb:hover { background: #a0522d; }
+/* === AWARDS === */
+.awards { text-align: left; margin: 20px auto; display: inline-block; }
+.awards p { font-size: 1.2rem; margin: 5px 0; border-bottom: 1px dashed #5a3d2b; padding-bottom: 5px;}
