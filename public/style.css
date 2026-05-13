@@ -1,81 +1,298 @@
+/* style.css */
 @import url('https://fonts.googleapis.com/css2?family=Rye&family=Sancreek&display=swap');
 
-body, html {
-    margin: 0; padding: 0; width: 100%; height: 100%;
-    background-color: #1a1a1a; color: #f4e4bc;
-    font-family: 'Rye', cursive; overflow: hidden;
+* {
+    box-sizing: border-box;
     user-select: none;
 }
 
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #111;
+    color: #f4e4bc;
+    font-family: 'Rye', cursive;
+    overflow: hidden;
+}
+
 #game-canvas {
-    display: block; width: 100%; height: 100%;
+    display: block;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
 }
 
-/* Western UI Theme */
-.ui-layer {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    pointer-events: none; display: flex; flex-direction: column;
+#ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
 }
 
+/* HUD Elements */
+#hud-top-left, #hud-top-right {
+    position: absolute;
+    top: 15px;
+    background: rgba(43, 29, 20, 0.85);
+    border: 2px solid #5c4033;
+    padding: 10px;
+    border-radius: 5px;
+    pointer-events: auto;
+    text-shadow: 1px 1px 2px #000;
+    font-size: 14px;
+}
+
+#hud-top-left { left: 15px; }
+#hud-top-right { right: 15px; text-align: right; }
+
+#hp-bar-container {
+    width: 200px;
+    height: 20px;
+    background: #333;
+    border: 2px solid #000;
+    position: relative;
+    margin-bottom: 5px;
+}
+
+#hp-bar {
+    width: 100%;
+    height: 100%;
+    background: #c00;
+    transition: width 0.2s;
+}
+
+#hp-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 12px;
+    line-height: 18px;
+    color: #fff;
+}
+
+/* Departure Warning */
+#departure-warning {
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #ff0000;
+    font-size: 50px;
+    font-family: 'Sancreek', cursive;
+    text-shadow: 4px 4px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+    text-align: center;
+    z-index: 50;
+    pointer-events: none;
+    animation: pulseWarning 0.5s infinite alternate;
+}
+
+@keyframes pulseWarning {
+    from { transform: translateX(-50%) scale(1); }
+    to { transform: translateX(-50%) scale(1.1); }
+}
+
+#interaction-prompt {
+    position: absolute;
+    bottom: 25%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.7);
+    padding: 10px 20px;
+    border: 2px solid #fff;
+    border-radius: 5px;
+    font-size: 24px;
+}
+
+/* Modals */
 .modal {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     background: url('https://www.transparenttextures.com/patterns/wood-pattern.png'), #5c4033;
-    border: 4px solid #2b1d14; border-radius: 8px; padding: 20px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.8); pointer-events: auto;
-    text-align: center; display: none; z-index: 100;
+    border: 4px solid #2b1d14;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.9);
+    pointer-events: auto;
+    text-align: center;
+    display: none;
+    z-index: 100;
+    min-width: 300px;
 }
 
-.modal h2 { font-family: 'Sancreek', cursive; margin-top: 0; color: #ffcc00; text-shadow: 2px 2px #000; }
+.modal.active {
+    display: block;
+}
+
+.modal h1, .modal h2 {
+    font-family: 'Sancreek', cursive;
+    margin-top: 0;
+    color: #ffcc00;
+    text-shadow: 2px 2px #000;
+}
+
 .modal button {
-    background: #8b5a2b; color: #fff; border: 2px solid #3e2723;
-    padding: 10px 20px; font-family: 'Rye', cursive; cursor: pointer;
-    margin: 5px; transition: 0.2s;
-}
-.modal button:hover { background: #a0522d; transform: scale(1.05); }
-
-/* Specific Menus */
-#main-menu { display: block; width: 400px; }
-#main-menu input { width: 80%; padding: 10px; margin: 10px 0; font-family: 'Rye'; text-align: center; }
-
-#hud { position: absolute; top: 10px; left: 10px; pointer-events: auto; text-shadow: 1px 1px 2px #000; }
-#hud-right { position: absolute; top: 10px; right: 10px; text-align: right; pointer-events: auto; text-shadow: 1px 1px 2px #000; }
-
-#warning-msg {
-    position: absolute; top: 20%; left: 50%; transform: translateX(-50%);
-    color: red; font-size: 48px; font-family: 'Sancreek', cursive;
-    text-shadow: 3px 3px 0 #000; display: none; z-index: 50;
+    background: #8b5a2b;
+    color: #fff;
+    border: 2px solid #3e2723;
+    padding: 10px 20px;
+    font-family: 'Rye', cursive;
+    cursor: pointer;
+    margin: 5px;
+    transition: 0.2s;
+    font-size: 16px;
 }
 
-/* Trading Menu */
-.trade-container { display: flex; justify-content: space-between; gap: 20px; }
-.trade-side { border: 2px dashed #3e2723; padding: 10px; width: 200px; }
-.slider-group { margin: 10px 0; }
-.slider-group input { width: 100%; }
-.active-trade { color: #00ff00; text-shadow: 1px 1px #000; }
+.modal button:hover {
+    background: #a0522d;
+    transform: scale(1.05);
+}
 
-/* Mobile Controls */
-#mobile-controls {
-    position: absolute; bottom: 20px; width: 100%; height: 150px;
-    display: none; pointer-events: none; z-index: 10;
+.modal input[type="text"] {
+    width: 80%;
+    padding: 10px;
+    margin: 10px 0;
+    font-family: 'Rye', cursive;
+    text-align: center;
+    background: #e6d5a7;
+    border: 2px solid #2b1d14;
 }
-.joystick {
-    position: absolute; bottom: 20px; width: 120px; height: 120px;
-    background: rgba(255,255,255,0.2); border-radius: 50%; pointer-events: auto;
+
+/* Trading Menu Specifics */
+.trade-layout {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 20px;
 }
-#joy-move { left: 20px; }
-#joy-aim { right: 20px; }
-.action-btn {
-    position: absolute; bottom: 150px; right: 20px; width: 60px; height: 60px;
-    background: rgba(200,0,0,0.5); border-radius: 50%; pointer-events: auto;
-    color: white; font-family: 'Rye'; border: 2px solid #fff;
+
+.trade-side {
+    border: 2px dashed #3e2723;
+    padding: 15px;
+    width: 250px;
+    background: rgba(0,0,0,0.2);
+}
+
+.trade-item {
+    margin: 10px 0;
+    text-align: left;
+}
+
+.trade-item input[type="range"] {
+    width: 100%;
+}
+
+.trade-item.active-slot {
+    color: #00ff00;
+    text-shadow: 1px 1px 2px #000;
+}
+
+/* Shop Layout */
+.shop-layout {
+    display: flex;
+    gap: 20px;
+}
+.shop-sell, .shop-buy {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 }
 
 /* Drunk Effect */
 @keyframes rainbowWobble {
     0% { filter: hue-rotate(0deg); transform: scale(1) skewX(0deg); }
-    25% { filter: hue-rotate(90deg); transform: scale(1.02) skewX(2deg); }
+    25% { filter: hue-rotate(90deg); transform: scale(1.05) skewX(3deg); }
     50% { filter: hue-rotate(180deg); transform: scale(1) skewX(0deg); }
-    75% { filter: hue-rotate(270deg); transform: scale(1.02) skewX(-2deg); }
+    75% { filter: hue-rotate(270deg); transform: scale(1.05) skewX(-3deg); }
     100% { filter: hue-rotate(360deg); transform: scale(1) skewX(0deg); }
 }
-.drunk-mode { animation: rainbowWobble 4s infinite linear; }
+
+.drunk-mode #game-canvas {
+    animation: rainbowWobble 4s infinite linear;
+}
+
+/* Mobile Controls */
+#mobile-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.joystick-area {
+    position: absolute;
+    bottom: 30px;
+    width: 150px;
+    height: 150px;
+    pointer-events: auto;
+}
+
+#joystick-move-area { left: 30px; }
+#joystick-aim-area { right: 30px; }
+
+.joystick-base {
+    width: 120px;
+    height: 120px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    position: absolute;
+    top: 15px;
+    left: 15px;
+}
+
+.joystick-stick {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    position: absolute;
+    top: 35px;
+    left: 35px;
+}
+
+.mobile-buttons {
+    position: absolute;
+    bottom: 200px;
+    right: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: auto;
+}
+
+.mobile-buttons button {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(139, 0, 0, 0.6);
+    color: white;
+    font-family: 'Rye', cursive;
+    font-size: 20px;
+    border: 2px solid #fff;
+}
+
+#spectator-ui {
+    position: absolute;
+    bottom: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    background: rgba(0,0,0,0.8);
+    padding: 20px;
+    border: 2px solid #fff;
+    pointer-events: auto;
+}
