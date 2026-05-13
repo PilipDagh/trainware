@@ -3,182 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Transcontinental Survival</title>
+    <title>1870s Transcontinental</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Beautiful Main Menu & Lobby System -->
-    <div id="menu-container">
-        <div id="screen-main" class="menu-panel">
-            <h1 class="game-title">TRANSCONTINENTAL<br><span class="subtitle">1870s SURVIVAL</span></h1>
-            <input type="text" id="playerName" value="Conductor" maxlength="12" placeholder="Enter Your Name"><br>
-            <button class="menu-btn" onclick="window.ui.showScreen('screen-create')">CREATE TRAIN</button>
-            <button class="menu-btn" onclick="window.ui.showJoin()">JOIN TRAIN</button>
-            <button class="menu-btn" onclick="window.ui.showScreen('screen-settings')">SETTINGS</button>
-        </div>
-
-        <div id="screen-settings" class="menu-panel hidden">
-            <h2>SETTINGS</h2>
-            <div class="setting-group">
-                <label class="setting-item">
-                    <input type="checkbox" id="mobile-toggle"> Force Mobile Joysticks
-                </label><br><br>
-                <label class="setting-item">
-                    <input type="checkbox" id="autolock-toggle"> Enable Auto-Lock (Heat-Sync)
-                </label>
+    <!-- LOBBY & MENUS -->
+    <div id="lobby-ui" class="screen active">
+        <div class="menu-box western-border">
+            <h1>TRANSCONTINENTAL</h1>
+            <h2>1870s Survival</h2>
+            <input type="text" id="username-input" placeholder="Enter Username..." maxlength="12">
+            <input type="text" id="room-input" placeholder="Room Code (to join)" maxlength="8">
+            <div class="settings">
+                <label><input type="checkbox" id="mobile-toggle"> Mobile Mode</label>
+                <label><input type="checkbox" id="lockon-toggle"> Auto Lock-On</label>
             </div>
-            <br>
-            <button class="menu-btn" onclick="window.ui.saveSettings()">SAVE & BACK</button>
-        </div>
-
-        <div id="screen-create" class="menu-panel hidden">
-            <h2>CREATE LOBBY</h2>
-            <input type="text" id="lobbyName" value="Express Train" placeholder="Lobby Name"><br>
-            <input type="number" id="maxPlayers" min="1" max="6" value="6" placeholder="Max Players"><br>
-            <input type="text" id="lobbyPassword" placeholder="Password (Leave blank for public)"><br>
-            <div class="setting-group" style="margin: 15px 0; text-align: left;">
-                <label class="setting-item" style="color: #ff4444; font-weight: bold;">
-                    <input type="checkbox" id="traitor-toggle" checked> Enable Traitor Role
-                </label>
+            <div class="buttons">
+                <button id="btn-create">Create Lobby</button>
+                <button id="btn-join">Join Lobby</button>
             </div>
-            <button class="menu-btn" onclick="window.ui.createLobby()">LAUNCH TRAIN</button>
-            <button class="menu-btn" onclick="window.ui.showScreen('screen-main')">BACK</button>
-        </div>
-
-        <div id="screen-join" class="menu-panel hidden">
-            <h2>AVAILABLE TRAINS</h2>
-            <div id="lobby-list"></div>
-            <button class="menu-btn" onclick="window.ui.showScreen('screen-main')" style="margin-top: 15px;">BACK</button>
-        </div>
-
-        <div id="screen-lobby" class="menu-panel hidden">
-            <h2 id="lobby-title">LOBBY</h2>
-            <ul id="player-list"></ul>
-            <button class="menu-btn" onclick="window.ui.startGame()">DEPART NOW</button>
+            <div id="lobby-players"></div>
+            <button id="btn-start" class="hidden">Start Journey</button>
         </div>
     </div>
 
-    <!-- Role Reveal Overlay (Among Us Style) -->
-    <div id="role-reveal" class="hidden">
-        <h1 id="role-title">ROLE</h1>
-        <p id="role-desc">Description</p>
-    </div>
+    <!-- GAME OVERLAYS & HUD -->
+    <div id="game-ui" class="screen hidden">
+        <canvas id="game-canvas"></canvas>
 
-    <!-- In-Game UI -->
-    <div id="game-ui" class="hidden">
-        <div id="stats">
-            <div class="stat-row">HP: <span id="hp" class="text-green">120</span> | Ammo: <span id="mag">5</span>/<span id="ammo">32</span> | $: <span id="money" class="text-gold">0</span></div>
-            <div class="stat-row">Dist: <span id="dist">0</span>/3181 km | Biome: <span id="biome">Forest</span></div>
-            <div class="stat-row">Fuel: <span id="fuel" class="text-orange">1003</span> | Speed: <span id="speed">0</span> km/h | Cold: <span id="cold" class="text-blue">167</span></div>
-            <div class="stat-row">
-                <span style="color: gold;">G: <span id="inv-gold">0</span>/11</span> | 
-                <span style="color: silver;">S: <span id="inv-silver">0</span>/15</span> | 
-                <span style="color: #aaa;">C: <span id="inv-coal">0</span>/27</span> |
-                <span style="color: #d2b48c;">Skins: <span id="inv-skins">0</span></span> |
-                <span style="color: #8b5a2b;">Planks: <span id="inv-planks">0</span></span>
-            </div>
-            <div class="stat-row">
-                <span style="color: #f39c12;">Bottles: <span id="inv-bottles">0</span></span> | 
-                <span style="color: #d35400;">Barrels: <span id="inv-barrels">0</span></span> |
-                <span style="color: #fff;">Watches: <span id="inv-watches">0</span>/2</span> |
-                <span style="color: #ff6347;">Meat: <span id="inv-rawmeat">0</span>/<span id="inv-cookedmeat">0</span></span>
-            </div>
+        <!-- Dynamic Warnings & Animations -->
+        <div id="role-reveal" class="hidden">
+            <h1 id="role-title">YOU ARE THE CONDUCTOR</h1>
+            <p id="role-buffs">No buffs.</p>
+        </div>
+        <div id="departure-warning" class="hidden">
+            <h1>TRAIN DEPARTING IN <span id="depart-timer">8</span> SECONDS!</h1>
+            <p>Get on board or get left behind!</p>
+        </div>
+        <div id="event-warning" class="hidden">WARNING!</div>
+
+        <!-- Heads Up Display -->
+        <div id="hud-top-left" class="hud-panel">
+            <div>Distance: <span id="hud-dist">0</span> / 3181 km</div>
+            <div>Speed: <span id="hud-speed">0</span> km/h</div>
+            <div>Biome: <span id="hud-biome">Forest</span></div>
         </div>
         
-        <!-- Bridge Out HUD -->
-        <div id="bridge-ui" class="hidden">
-            ⚠️ BRIDGE OUT ⚠️<br>
-            Planks: <span id="bridge-planks">0/10</span>
+        <div id="hud-top-right" class="hud-panel">
+            <div>Money: $<span id="hud-money">0</span></div>
+            <div>Ammo: <span id="hud-ammo">30</span></div>
+            <div>HP: <span id="hud-hp">100</span></div>
+            <div id="hud-cold-container">Cold: <span id="hud-cold">167</span></div>
         </div>
 
-        <div id="controls">[WASD] Move | [Mouse] Aim | [Click] <span id="pc-action-text">Shoot</span><br>[E] Interact/Dump/Drink | [R] Reload | [B] Place Barrel<br>[F] Throw Bomb | [Space] Knife/Break Crate<br>
-            [L] Flashlight | [Hold T] Release Steam | [Y] Eat Meat
-        </div>
-        <div id="messages"></div>
-    </div>
-
-    <!-- Departure Warning -->
-    <div id="departure-warning" class="hidden">
-        TRAIN DEPARTING IN <span id="dep-timer">8</span>s!
-    </div>
-
-    <!-- Mobile Dual Joysticks & Side Buttons -->
-    <div id="mobile-controls" class="hidden">
-        <div id="move-joystick-container" class="joystick-base">
-            <div id="move-joystick-knob" class="joystick-knob"></div>
-        </div>
-        <div id="aim-joystick-container" class="joystick-base">
-            <div id="aim-joystick-knob" class="joystick-knob"></div>
+        <div id="hud-bottom-left" class="hud-panel">
+            <div>Train Fuel: <span id="hud-fuel">1003</span></div>
+            <div>Steam Pressure: <span id="hud-pressure">100</span></div>
         </div>
 
-        <div id="mobile-actions">
-            <button id="btn-shoot" class="action-btn primary-btn">FIRE</button>
-            <button id="btn-interact" class="action-btn">E</button>
-            <button id="btn-reload" class="action-btn">R</button>
-            <button id="btn-bomb" class="action-btn">F</button>
-            <button id="btn-barrel" class="action-btn">B</button>
-            <button id="btn-knife" class="action-btn">KNIFE</button>
-            <button id="btn-flashlight" class="action-btn">LIGHT</button>
-            <button id="btn-steam" class="action-btn">STEAM</button>
-            <button id="btn-eat" class="action-btn">EAT</button>
+        <div id="hud-bottom-right" class="hud-panel inventory">
+            <h3>Inventory</h3>
+            <div>Gold: <span id="inv-gold">0</span>/11</div>
+            <div>Silver: <span id="inv-silver">0</span>/15</div>
+            <div>Coal: <span id="inv-coal">0</span>/27</div>
+            <div>Raw Meat: <span id="inv-raw">0</span>/7</div>
+            <div>Cooked Meat: <span id="inv-cooked">0</span>/7</div>
+            <div>Skins: <span id="inv-skins">0</span></div>
+            <div>Watches: <span id="inv-watches">0</span>/2</div>
+        </div>
+
+        <div id="interaction-prompt" class="hidden">Press [E] to Interact</div>
+
+        <!-- Mobile Controls (Hidden on PC) -->
+        <div id="mobile-controls" class="hidden">
+            <div id="joy-left" class="joystick">
+                <div class="joy-knob" id="joy-left-knob"></div>
+            </div>
+            <div id="joy-right" class="joystick">
+                <div class="joy-knob" id="joy-right-knob"></div>
+            </div>
+            <div id="mobile-buttons">
+                <button id="btn-eat" class="action-btn">EAT</button>
+                <button id="btn-light" class="action-btn">LIGHT</button>
+                <button id="btn-steam" class="action-btn">STEAM</button>
+                <button id="btn-interact" class="action-btn">ACT (E)</button>
+                <button id="btn-knife" class="action-btn">KNIFE</button>
+            </div>
         </div>
     </div>
 
-    <!-- Overlays -->
-    <div id="shop" class="hidden overlay-box">
-        <h2>Town Shop</h2>
-        <div id="shop-items"></div>
-        <button class="menu-btn" onclick="window.ui.closeShop()">Close</button>
-    </div>
-
-    <div id="storage-menu" class="hidden overlay-box">
-        <h2 class="text-gold">STORAGE CAR</h2>
-        <p>Capacity: <span id="storage-cap">0/99</span></p>
-        <div style="text-align: left; margin: 10px 0;">
-            <label>Gold: <input type="range" id="slider-gold" min="0" max="0" value="0" oninput="window.ui.updateStorageUI()"><span id="val-gold">0</span></label><br>
-            <label>Silver: <input type="range" id="slider-silver" min="0" max="0" value="0" oninput="window.ui.updateStorageUI()"><span id="val-silver">0</span></label><br>
-            <label>Coal: <input type="range" id="slider-coal" min="0" max="0" value="0" oninput="window.ui.updateStorageUI()"><span id="val-coal">0</span></label>
+    <!-- MODALS -->
+    <div id="shop-menu" class="modal hidden">
+        <div class="modal-content western-border">
+            <h2>Town Shop</h2>
+            <div class="shop-grid" id="shop-items"></div>
+            <button class="close-btn" onclick="document.getElementById('shop-menu').classList.add('hidden')">Close</button>
         </div>
-        <button class="menu-btn" onclick="window.ui.depositStorage()">Deposit</button>
-        <button class="menu-btn" onclick="window.ui.closeStorage()">Close</button>
     </div>
 
-    <div id="revive-menu" class="hidden overlay-box">
-        <h2 class="text-gold">REVIVE PLAYER</h2>
-        <p>Select a fallen comrade to revive:</p>
-        <div id="dead-players-list"></div>
-        <button class="menu-btn" onclick="window.ui.closeRevive()">Cancel</button>
+    <div id="gambling-menu" class="modal hidden">
+        <div class="modal-content western-border">
+            <h2>Gambling Car</h2>
+            <div class="tabs">
+                <button onclick="switchGambleTab('roulette')">Roulette (2x/14x)</button>
+                <button onclick="switchGambleTab('horses')">Horses (4x)</button>
+                <button onclick="switchGambleTab('poker')">Poker (3x)</button>
+            </div>
+            <div id="gamble-action" class="gamble-area">
+                <input type="number" id="gamble-amount" value="5" min="1">
+                <select id="roulette-color"><option value="red">Red</option><option value="black">Black</option><option value="green">Green</option></select>
+                <button id="btn-place-bet">Place Bet</button>
+            </div>
+            <p id="gamble-result"></p>
+            <button class="close-btn" onclick="document.getElementById('gambling-menu').classList.add('hidden')">Leave</button>
+        </div>
     </div>
 
-    <div id="gambling-menu" class="hidden overlay-box">
-        <h2 id="gamble-title" class="text-gold">PLACE YOUR BETS</h2>
-        <p id="gamble-timer" class="text-red">Time left: 10s</p>
-        <div id="gamble-options"></div>
-        <button class="menu-btn" onclick="window.ui.closeGambling()">Close</button>
+    <div id="storage-menu" class="modal hidden">
+        <div class="modal-content western-border">
+            <h2>Storage Car</h2>
+            <p>Capacity Left: <span id="storage-space">99</span></p>
+            <div class="slider-group">
+                <label>Gold to Deposit: <span id="val-gold">0</span></label>
+                <input type="range" id="slide-gold" min="0" max="11" value="0">
+            </div>
+            <div class="slider-group">
+                <label>Silver to Deposit: <span id="val-silver">0</span></label>
+                <input type="range" id="slide-silver" min="0" max="15" value="0">
+            </div>
+            <div class="slider-group">
+                <label>Coal to Deposit: <span id="val-coal">0</span></label>
+                <input type="range" id="slide-coal" min="0" max="27" value="0">
+            </div>
+            <button id="btn-deposit-storage">Deposit Resources</button>
+            <button class="close-btn" onclick="document.getElementById('storage-menu').classList.add('hidden')">Close</button>
+        </div>
     </div>
 
-    <div id="death" class="hidden overlay-box">
-        <h1 class="text-red">YOU DIED</h1>
-        <button class="menu-btn" onclick="window.ui.spectateNext()">Spectate Next</button>
+    <div id="revive-menu" class="modal hidden">
+        <div class="modal-content western-border">
+            <h2>Revive a Player</h2>
+            <div id="dead-players-list"></div>
+            <button class="close-btn" onclick="document.getElementById('revive-menu').classList.add('hidden')">Cancel</button>
+        </div>
     </div>
 
-    <div id="all-dead" class="hidden overlay-box">
-        <h1 class="text-red">GAME OVER</h1>
-        <button class="menu-btn" onclick="window.ui.voteRestart()">Vote Restart (50%)</button>
+    <div id="victory-screen" class="screen hidden">
+        <div class="menu-box western-border text-center">
+            <h1>wowww you win Tyler wowwww</h1>
+            <p>made by Julian, Kylin, and Tyler!</p>
+            <h2>Hall of Fame</h2>
+            <div id="awards-list" class="awards"></div>
+            <button onclick="location.reload()">Return to Lobby</button>
+        </div>
     </div>
 
-    <div id="victory" class="hidden overlay-box">
-        <h1 class="text-gold">wowww you win Tyler wowwww!</h1>
-        <h2>HALL OF FAME</h2>
-        <p>The Lead-Slinger (Most Kills): <span id="hof-kills" class="text-red"></span></p>
-        <p>The Drunkard (Most Beer): <span id="hof-drunk" class="text-orange"></span></p>
-        <p>The Workhorse (Most Coal): <span id="hof-coal" class="text-blue"></span></p>
-        <p>The Snake (Traitor): <span id="hof-snake" class="text-green"></span></p>
-        <button class="menu-btn" onclick="window.ui.voteRestart()">Vote Restart</button>
+    <div id="gameover-screen" class="screen hidden">
+        <div class="menu-box western-border text-center">
+            <h1>EVERYONE DIED</h1>
+            <p>The wilderness claims another train.</p>
+            <p id="restart-votes">Votes to Restart: 0</p>
+            <button id="btn-vote-restart">Vote Restart</button>
+        </div>
     </div>
 
-    <canvas id="gameCanvas" class="hidden"></canvas>
-
+    <!-- Scripts -->
     <script src="/socket.io/socket.io.js"></script>
     <script src="client.js"></script>
 </body>
