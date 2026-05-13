@@ -3,171 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>1870s Transcontinental</title>
+    <title>Transcontinental Survival 1870</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- LOBBY & MENUS -->
-    <div id="lobby-ui" class="screen active">
-        <div class="menu-box western-border">
-            <h1>TRANSCONTINENTAL</h1>
-            <h2>1870s Survival</h2>
-            <input type="text" id="username-input" placeholder="Enter Username..." maxlength="12">
-            <input type="text" id="room-input" placeholder="Room Code (to join)" maxlength="8">
-            <div class="settings">
-                <label><input type="checkbox" id="mobile-toggle"> Mobile Mode</label>
-                <label><input type="checkbox" id="lockon-toggle"> Auto Lock-On</label>
-            </div>
-            <div class="buttons">
-                <button id="btn-create">Create Lobby</button>
-                <button id="btn-join">Join Lobby</button>
-            </div>
-            <div id="lobby-players"></div>
-            <button id="btn-start" class="hidden">Start Journey</button>
-        </div>
-    </div>
+    <canvas id="game-canvas"></canvas>
 
-    <!-- GAME OVERLAYS & HUD -->
-    <div id="game-ui" class="screen hidden">
-        <canvas id="game-canvas"></canvas>
-
-        <!-- Dynamic Warnings & Animations -->
-        <div id="role-reveal" class="hidden">
-            <h1 id="role-title">YOU ARE THE CONDUCTOR</h1>
-            <p id="role-buffs">No buffs.</p>
-        </div>
-        <div id="departure-warning" class="hidden">
-            <h1>TRAIN DEPARTING IN <span id="depart-timer">8</span> SECONDS!</h1>
-            <p>Get on board or get left behind!</p>
-        </div>
-        <div id="event-warning" class="hidden">WARNING!</div>
-
-        <!-- Heads Up Display -->
-        <div id="hud-top-left" class="hud-panel">
-            <div>Distance: <span id="hud-dist">0</span> / 3181 km</div>
-            <div>Speed: <span id="hud-speed">0</span> km/h</div>
-            <div>Biome: <span id="hud-biome">Forest</span></div>
+    <div class="ui-layer">
+        <div id="hud">
+            <div id="health-display">HP: 100</div>
+            <div id="ammo-display">Ammo: 30</div>
+            <div id="money-display">Money: $0</div>
+            <div id="role-display">Role: Normal</div>
+            <div id="inventory-display"></div>
         </div>
         
-        <div id="hud-top-right" class="hud-panel">
-            <div>Money: $<span id="hud-money">0</span></div>
-            <div>Ammo: <span id="hud-ammo">30</span></div>
-            <div>HP: <span id="hud-hp">100</span></div>
-            <div id="hud-cold-container">Cold: <span id="hud-cold">167</span></div>
+        <div id="hud-right">
+            <div id="distance-display">Distance: 0 / 3181 km</div>
+            <div id="fuel-display">Fuel: 1003 / 1003</div>
+            <div id="speed-display">Speed: 0 km/h</div>
+            <div id="pressure-display">Pressure: 0 / 100</div>
         </div>
 
-        <div id="hud-bottom-left" class="hud-panel">
-            <div>Train Fuel: <span id="hud-fuel">1003</span></div>
-            <div>Steam Pressure: <span id="hud-pressure">100</span></div>
+        <div id="warning-msg">TRAIN DEPARTING IN 8 SECONDS</div>
+
+        <!-- Main Menu -->
+        <div id="main-menu" class="modal">
+            <h2>Transcontinental 1870</h2>
+            <input type="text" id="player-name" placeholder="Enter Name" maxlength="12">
+            <input type="text" id="lobby-id" placeholder="Lobby Code">
+            <button onclick="createLobby()">Create Lobby</button>
+            <button onclick="joinLobby()">Join Lobby</button>
+            <hr style="border-color: #3e2723;">
+            <label><input type="checkbox" id="auto-lock"> Auto Lock-On Heat-Sync</label><br>
+            <label><input type="checkbox" id="mobile-mode"> Mobile Mode</label>
         </div>
 
-        <div id="hud-bottom-right" class="hud-panel inventory">
-            <h3>Inventory</h3>
-            <div>Gold: <span id="inv-gold">0</span>/11</div>
-            <div>Silver: <span id="inv-silver">0</span>/15</div>
-            <div>Coal: <span id="inv-coal">0</span>/27</div>
-            <div>Raw Meat: <span id="inv-raw">0</span>/7</div>
-            <div>Cooked Meat: <span id="inv-cooked">0</span>/7</div>
-            <div>Skins: <span id="inv-skins">0</span></div>
-            <div>Watches: <span id="inv-watches">0</span>/2</div>
-        </div>
-
-        <div id="interaction-prompt" class="hidden">Press [E] to Interact</div>
-
-        <!-- Mobile Controls (Hidden on PC) -->
-        <div id="mobile-controls" class="hidden">
-            <div id="joy-left" class="joystick">
-                <div class="joy-knob" id="joy-left-knob"></div>
+        <!-- Trading Menu -->
+        <div id="trade-menu" class="modal">
+            <h2>Trading Car</h2>
+            <div class="trade-container">
+                <div class="trade-side" id="trade-self">
+                    <h3>Your Offer</h3>
+                    <div class="slider-group">Gold: <input type="range" id="t-gold" min="0" max="0" value="0"><span id="tv-gold">0</span></div>
+                    <div class="slider-group">Silver: <input type="range" id="t-silver" min="0" max="0" value="0"><span id="tv-silver">0</span></div>
+                    <div class="slider-group">Coal: <input type="range" id="t-coal" min="0" max="0" value="0"><span id="tv-coal">0</span></div>
+                    <div class="slider-group">Skins: <input type="range" id="t-skins" min="0" max="0" value="0"><span id="tv-skins">0</span></div>
+                    <div class="slider-group">Money: <input type="range" id="t-money" min="0" max="0" value="0"><span id="tv-money">$0</span></div>
+                </div>
+                <div class="trade-side" id="trade-other">
+                    <h3 id="trade-other-status">Waiting For Another Player...</h3>
+                    <div id="trade-other-items"></div>
+                </div>
             </div>
-            <div id="joy-right" class="joystick">
-                <div class="joy-knob" id="joy-right-knob"></div>
-            </div>
-            <div id="mobile-buttons">
-                <button id="btn-eat" class="action-btn">EAT</button>
-                <button id="btn-light" class="action-btn">LIGHT</button>
-                <button id="btn-steam" class="action-btn">STEAM</button>
-                <button id="btn-interact" class="action-btn">ACT (E)</button>
-                <button id="btn-knife" class="action-btn">KNIFE</button>
-            </div>
+            <h3 id="trade-countdown" style="color:red; display:none;">Trade in 5...</h3>
+            <button onclick="confirmTrade()">Confirm</button>
+            <button onclick="declineTrade()">Decline</button>
         </div>
-    </div>
 
-    <!-- MODALS -->
-    <div id="shop-menu" class="modal hidden">
-        <div class="modal-content western-border">
-            <h2>Town Shop</h2>
-            <div class="shop-grid" id="shop-items"></div>
-            <button class="close-btn" onclick="document.getElementById('shop-menu').classList.add('hidden')">Close</button>
+        <!-- Storage Menu -->
+        <div id="storage-menu" class="modal">
+            <h2>Storage Car (<span id="storage-count">0</span>/6)</h2>
+            <p>Capacity: <span id="storage-cap">0</span></p>
+            <button onclick="buyStorageCar()">Buy Car ($41)</button>
+            <hr>
+            <div class="slider-group">Deposit Gold: <input type="range" id="s-gold" min="0" max="0" value="0"></div>
+            <div class="slider-group">Deposit Silver: <input type="range" id="s-silver" min="0" max="0" value="0"></div>
+            <div class="slider-group">Deposit Coal: <input type="range" id="s-coal" min="0" max="0" value="0"></div>
+            <button onclick="depositStorage()">Deposit</button>
+            <button onclick="closeModal('storage-menu')">Close</button>
         </div>
-    </div>
 
-    <div id="gambling-menu" class="modal hidden">
-        <div class="modal-content western-border">
+        <!-- Gambling Menu -->
+        <div id="gamble-menu" class="modal">
             <h2>Gambling Car</h2>
-            <div class="tabs">
-                <button onclick="switchGambleTab('roulette')">Roulette (2x/14x)</button>
-                <button onclick="switchGambleTab('horses')">Horses (4x)</button>
-                <button onclick="switchGambleTab('poker')">Poker (3x)</button>
-            </div>
-            <div id="gamble-action" class="gamble-area">
-                <input type="number" id="gamble-amount" value="5" min="1">
-                <select id="roulette-color"><option value="red">Red</option><option value="black">Black</option><option value="green">Green</option></select>
-                <button id="btn-place-bet">Place Bet</button>
-            </div>
-            <p id="gamble-result"></p>
-            <button class="close-btn" onclick="document.getElementById('gambling-menu').classList.add('hidden')">Leave</button>
+            <button onclick="gamble('horse')">Horse Race (4x) - $10</button>
+            <button onclick="gamble('roulette_red')">Roulette Red (2x) - $10</button>
+            <button onclick="gamble('roulette_green')">Roulette Green (14x) - $10</button>
+            <button onclick="gamble('poker')">Poker (3x) - $10</button>
+            <br><button onclick="closeModal('gamble-menu')">Leave</button>
+        </div>
+
+        <!-- Shop Menu -->
+        <div id="shop-menu" class="modal">
+            <h2>Town Shop</h2>
+            <button onclick="buyItem('upgrade_speed')">Train Speed Upgrade ($100)</button>
+            <button onclick="buyItem('flashlight')">Flashlight ($11)</button>
+            <button onclick="buyItem('headlight')">Headlight Upgrade ($15)</button>
+            <button onclick="buyItem('revive')">Revive Kit ($21)</button>
+            <button onclick="buyItem('beer_bottle')">Beer Bottle x3 ($5)</button>
+            <button onclick="buyItem('beer_barrel')">Beer Barrel ($15)</button>
+            <br><button onclick="sellItems()">Sell All Valuables</button>
+            <br><button onclick="closeModal('shop-menu')">Leave</button>
+        </div>
+
+        <!-- Victory Screen -->
+        <div id="victory-screen" class="modal" style="width: 80%; height: 80%;">
+            <h1 style="font-size: 60px;">wowww you win Tyler wowwww</h1>
+            <h3>made by Julian, Kylin, and Tyler!</h3>
+            <div id="hall-of-fame" style="text-align: left; margin: 40px;"></div>
+        </div>
+
+        <!-- Mobile Controls -->
+        <div id="mobile-controls">
+            <div class="joystick" id="joy-move"></div>
+            <div class="joystick" id="joy-aim"></div>
+            <button class="action-btn" id="btn-interact" style="bottom: 100px;">E</button>
+            <button class="action-btn" id="btn-attack" style="bottom: 20px;">ATK</button>
         </div>
     </div>
 
-    <div id="storage-menu" class="modal hidden">
-        <div class="modal-content western-border">
-            <h2>Storage Car</h2>
-            <p>Capacity Left: <span id="storage-space">99</span></p>
-            <div class="slider-group">
-                <label>Gold to Deposit: <span id="val-gold">0</span></label>
-                <input type="range" id="slide-gold" min="0" max="11" value="0">
-            </div>
-            <div class="slider-group">
-                <label>Silver to Deposit: <span id="val-silver">0</span></label>
-                <input type="range" id="slide-silver" min="0" max="15" value="0">
-            </div>
-            <div class="slider-group">
-                <label>Coal to Deposit: <span id="val-coal">0</span></label>
-                <input type="range" id="slide-coal" min="0" max="27" value="0">
-            </div>
-            <button id="btn-deposit-storage">Deposit Resources</button>
-            <button class="close-btn" onclick="document.getElementById('storage-menu').classList.add('hidden')">Close</button>
-        </div>
-    </div>
-
-    <div id="revive-menu" class="modal hidden">
-        <div class="modal-content western-border">
-            <h2>Revive a Player</h2>
-            <div id="dead-players-list"></div>
-            <button class="close-btn" onclick="document.getElementById('revive-menu').classList.add('hidden')">Cancel</button>
-        </div>
-    </div>
-
-    <div id="victory-screen" class="screen hidden">
-        <div class="menu-box western-border text-center">
-            <h1>wowww you win Tyler wowwww</h1>
-            <p>made by Julian, Kylin, and Tyler!</p>
-            <h2>Hall of Fame</h2>
-            <div id="awards-list" class="awards"></div>
-            <button onclick="location.reload()">Return to Lobby</button>
-        </div>
-    </div>
-
-    <div id="gameover-screen" class="screen hidden">
-        <div class="menu-box western-border text-center">
-            <h1>EVERYONE DIED</h1>
-            <p>The wilderness claims another train.</p>
-            <p id="restart-votes">Votes to Restart: 0</p>
-            <button id="btn-vote-restart">Vote Restart</button>
-        </div>
-    </div>
-
-    <!-- Scripts -->
     <script src="/socket.io/socket.io.js"></script>
     <script src="client.js"></script>
 </body>
